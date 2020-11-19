@@ -1,7 +1,8 @@
+use std::{collections::HashSet, fs::OpenOptions, io::Read, io::Write, path::PathBuf};
+
 use serde_derive::{Deserialize, Serialize};
 use serenity::model::id::UserId;
 use smart_default::SmartDefault;
-use std::{collections::HashSet, fs::OpenOptions, io::Read, io::Write, path::PathBuf};
 
 const FILE: &str = "config.toml";
 
@@ -29,16 +30,15 @@ impl Config {
             cfg
         } else {
             let mut file = OpenOptions::new()
-                .create(true)
                 .read(true)
                 .open(path)
-                .expect("Unable to open `config.toml` for reading. Please check permissions.");
+                .expect("Unable to open `config.toml` for reading. Please check permissions");
 
             let mut content = String::new();
             file.read_to_string(&mut content)
-                .expect("Unable to read `config.toml`.");
+                .expect("Unable to read `config.toml`");
 
-            toml::from_str(&content).expect("Unable to parse `config.toml`.")
+            toml::from_str(&content).expect("Unable to parse `config.toml`")
         };
 
         conf
@@ -46,16 +46,16 @@ impl Config {
 
     pub(crate) fn save(&self) {
         let path = PathBuf::from(FILE);
-        let content = toml::to_string_pretty(self).expect("Unable to parse Config object.");
+        let content = toml::to_string_pretty(self).expect("Unable to parse Config object");
 
         let mut file = OpenOptions::new()
             .create(true)
             .write(true)
             .open(path)
-            .expect("Unable to open `config.toml` for writing.");
+            .expect("Unable to open `config.toml` for writing");
 
         file.write_all(content.as_bytes())
-            .expect("Unable to write to `config.toml`.");
+            .expect("Unable to write to `config.toml`");
     }
 }
 

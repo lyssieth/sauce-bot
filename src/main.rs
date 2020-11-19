@@ -6,6 +6,7 @@ use serenity::{
 
 mod commands;
 mod config;
+mod hooks;
 
 struct Handler;
 
@@ -15,6 +16,8 @@ type Result<T> = eyre::Result<T>;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    pretty_env_logger::init();
+
     let cfg = config::Config::load();
     let framework = StandardFramework::new()
         .configure(|c| {
@@ -27,6 +30,8 @@ async fn main() -> Result<()> {
                 .ignore_webhooks(true)
                 .case_insensitivity(true)
         })
+        .before(hooks::before)
+        .after(hooks::after)
         .group(&commands::BASIC_GROUP);
 
     let mut client = Client::builder(cfg.credentials().token())
