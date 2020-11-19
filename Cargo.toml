@@ -1,0 +1,17 @@
+[package]
+authors = ["Lyssieth <raxixor@rax.ee>"]
+edition = "2018"
+name = "sauce-bot"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+eyre = "0.6"
+sauce-api = "0.5"
+serde = "1.0"
+serde_derive = "1.0"
+serenity = "0.9"
+smart-default = "0.6"
+tokio = {version = "0.2", features = ["macros"]}
+toml = "0.5"
