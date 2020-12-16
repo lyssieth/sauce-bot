@@ -18,6 +18,8 @@ struct Saucenao;
 
 #[command]
 #[num_args(1)]
+#[bucket("saucenao-30s")]
+#[bucket("saucenao-24h")]
 async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let link = args.single::<String>()?;
     let chan = msg.channel_id;
