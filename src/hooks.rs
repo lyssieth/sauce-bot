@@ -1,4 +1,4 @@
-use log::{debug, warn};
+use log::{info, warn};
 use serenity::framework::standard::macros::hook;
 use serenity::framework::standard::CommandError;
 use serenity::model::prelude::Message;
@@ -8,7 +8,7 @@ use serenity::prelude::Context;
 pub async fn before(ctx: &Context, msg: &Message, cmd_name: &str) -> bool {
     let channel = msg.channel_id;
 
-    debug!(
+    info!(
         "Executing command `{}` in channel `{}` (ID: {})",
         cmd_name,
         channel
@@ -26,7 +26,7 @@ pub async fn after(ctx: &Context, msg: &Message, cmd_name: &str, error: Result<(
     let channel = msg.channel_id;
 
     if error.is_ok() {
-        debug!(
+        info!(
             "Executed command `{}` in `{}` (ID: {})",
             cmd_name,
             channel

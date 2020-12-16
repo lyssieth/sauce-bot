@@ -1,16 +1,25 @@
 use eyre::eyre;
+use log::info;
 use serenity::{
-    client::{Client, EventHandler},
+    async_trait,
+    client::{Client, Context, EventHandler},
     framework::StandardFramework,
+    model::prelude::{Activity, Ready},
 };
 
 mod commands;
 mod config;
 mod hooks;
+mod util;
 
 struct Handler;
 
-impl EventHandler for Handler {}
+#[async_trait]
+impl EventHandler for Handler {
+    async fn ready(&self, ctx: Context, _data_about_bot: Ready) {
+        ctx.set_activity(Activity::playing("sauce!help")).await;
+    }
+}
 
 type Result<T> = eyre::Result<T>;
 
@@ -32,7 +41,10 @@ async fn main() -> Result<()> {
         })
         .before(hooks::before)
         .after(hooks::after)
-        .group(&commands::BASIC_GROUP);
+        .group(&commands::BASIC_GROUP)
+        .group(&commands::IQDB_GROUP)
+        .group(&commands::SAUCENAO_GROUP)
+        .group(&commands::ADMIN_GROUP);
 
     let mut client = Client::builder(cfg.credentials().token())
         .event_handler(Handler)
@@ -40,6 +52,7 @@ async fn main() -> Result<()> {
         .await
         .expect("Error creating client");
 
+    info!("Starting bot...");
     if let Err(e) = client.start().await {
         Err(eyre!(
             "An error occurred while running the client: {:#?}",
