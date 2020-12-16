@@ -11,7 +11,7 @@ The bot uses the prefix `sauce!`.
 - `sauce!saucenao <link>` to use the saucenao backend
 - `sauce!iqdb <link>` to use the iqdb backend
 - `sauce!issue` to get a direct link to the issues page
-- `sauce!help [command]` to provide some help.
+- `sauce!help` to provide some help.
 
 ## Links
 
