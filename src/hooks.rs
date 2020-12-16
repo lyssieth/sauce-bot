@@ -50,7 +50,7 @@ pub async fn after(ctx: &Context, msg: &Message, cmd_name: &str, error: Result<(
 }
 
 #[hook]
-async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) {
+pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) {
     if let DispatchError::Ratelimited(duration) = error {
         if msg.content.contains("sauce!saucenao") {
             let _ = msg

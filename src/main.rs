@@ -41,6 +41,7 @@ async fn main() -> Result<()> {
         })
         .before(hooks::before)
         .after(hooks::after)
+        .on_dispatch_error(hooks::dispatch_error)
         .bucket("saucenao-30s", |b| b.limit(6).time_span(30))
         .await
         .bucket("saucenao-24h", |b| b.limit(200).time_span(24 * 60 * 60))
