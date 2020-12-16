@@ -9,6 +9,9 @@ The bot uses the prefix `sauce!`.
 ### Currently implemented
 
 - `sauce!saucenao <link>` to use the saucenao backend (faster but rate limited, more places searched)
+  - Rate limits currently:
+    - 30s: 6 searches
+    - 24h: 200 searches
 - `sauce!iqdb <link>` to use the iqdb backend (slower but no rate limit, less places searched)
 - `sauce!issue` to get a direct link to the issues page
 - `sauce!help` to provide some help.
