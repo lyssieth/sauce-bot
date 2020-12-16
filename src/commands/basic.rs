@@ -2,7 +2,7 @@ use serenity::{
     client::Context,
     framework::standard::{
         macros::{command, group},
-        CommandResult,
+        Args, CommandResult,
     },
     model::channel::Message,
 };
@@ -26,5 +26,10 @@ async fn issue(ctx: &Context, msg: &Message) -> CommandResult {
     )
     .await?;
 
+    Ok(())
+}
+
+#[command]
+async fn help(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     Ok(())
 }
