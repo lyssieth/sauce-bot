@@ -102,10 +102,6 @@ impl Settings {
         self.top_links
     }
 
-    pub(crate) fn owner_ids(&self) -> &Vec<u64> {
-        &self.owner_ids
-    }
-
     pub(crate) fn owner_ids_set(&self) -> HashSet<UserId> {
         self.owner_ids.iter().cloned().map(UserId).collect()
     }
