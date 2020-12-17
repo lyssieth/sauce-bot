@@ -37,7 +37,7 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
                     .field("sauce!iqdb <link>", "Takes a link and uses the iqdb backend to get results. Slower, without any rate limits, checks more locations.", false)
                     .field("sauce!issue", "Provides a link to the github to report issues with the bot.", false)
                     .field("sauce!help", "Provides help about the bot.", false)
-                    .color((22, 184, 184))
+                    .color((139, 216, 198))
             )
         ).await?;
 
