@@ -11,7 +11,7 @@ use serenity::{
 use crate::config::Config;
 
 #[group()]
-#[prefix("saucenao")]
+#[prefixes("saucenao", "nao")]
 #[commands(run)]
 #[default_command(run)]
 struct Saucenao;

@@ -33,7 +33,7 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
             m.embed(|e| 
                 e.title("Help")
                     .description(format!("All commands use the `sauce!` prefix. Some commands might take a few seconds due to calling a potentially slow web service.\nSettings:\n- Links Displayed: {}\n- Using Embeds: {}", cfg.top_links(), cfg.use_embeds()))
-                    .field("sauce!saucenao <link>", "Takes a link and uses the saucenao backend to get results. Fast, but has rate limits. Checks more locations.\nRate limits:\n- 6 searches in 30 seconds\n- 200 searches in 24 hours\nThese apply globally across the bot.", false)
+                    .field("sauce!saucenao <link>", "Takes a link and uses the saucenao backend to get results. Fast, but has rate limits. Checks more locations.\nAlso works with `sauce!nao`\n\nRate limits:\n- 6 searches in 30 seconds\n- 200 searches in 24 hours\nThese apply globally across the bot.", false)
                     .field("sauce!iqdb <link>", "Takes a link and uses the iqdb backend to get results. Slower, without any rate limits, checks more locations.", false)
                     .field("sauce!issue", "Provides a link to the github to report issues with the bot.", false)
                     .field("sauce!help", "Provides help about the bot.", false)
