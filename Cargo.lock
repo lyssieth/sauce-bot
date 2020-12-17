@@ -1177,9 +1177,9 @@ checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
 name = "sauce-api"
-version = "0.6.0"
+version = "0.6.1-alpha1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5dc1a4e98f724ccd3b835ce08c1693d942b51f95ebf90a7376b421763eabcd5"
+checksum = "9812300a8221f711c777ac4df5527e1218e6915708096832974124f3991b502f"
 dependencies = [
  "async-trait",
  "reqwest",
