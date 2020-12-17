@@ -53,16 +53,24 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                     );
 
                     let mut i = cfg.settings().top_links();
-                    for x in result.items {
-                        i -= 1;
+                    if result.items.is_empty() {
                         c.field(
-                            format!("Similarity: {:0.2}", x.similarity),
-                            format!("**<{}>**", x.link),
+                            "Found zero results",
+                            "Unable to find any results for the given link.",
                             false,
                         );
+                    } else {
+                        for x in result.items {
+                            i -= 1;
+                            c.field(
+                                format!("Similarity: {:0.2}", x.similarity),
+                                format!("**<{}>**", x.link),
+                                false,
+                            );
 
-                        if i == 0 {
-                            break;
+                            if i == 0 {
+                                break;
+                            }
                         }
                     }
 
@@ -85,9 +93,13 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
             let content = {
                 let mut a = String::new();
-                for x in lines {
-                    a.push_str(&x);
-                    a.push('\n');
+                if lines.is_empty() {
+                    a.push_str("Found zero results.")
+                } else {
+                    for x in lines {
+                        a.push_str(&x);
+                        a.push('\n');
+                    }
                 }
                 a
             };
