@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use eyre::eyre;
 use log::info;
 use serenity::{
@@ -8,7 +6,6 @@ use serenity::{
     framework::StandardFramework,
     model::prelude::{Activity, Ready},
 };
-use tokio::time::delay_for;
 
 mod commands;
 mod config;
