@@ -1204,6 +1204,7 @@ dependencies = [
  "smart-default",
  "tokio",
  "toml",
+ "url",
 ]
 
 [[package]]

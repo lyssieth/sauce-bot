@@ -7,6 +7,7 @@ use serenity::{
     },
     model::channel::Message,
 };
+use url::Url;
 
 use crate::config::Config;
 
@@ -19,12 +20,27 @@ struct Iqdb;
 #[command]
 #[num_args(1)]
 async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let link = args.single::<String>()?;
     let chan = msg.channel_id;
+    let link: Option<Url> = match args.single::<Url>() {
+        Ok(url) => Some(url),
+        Err(_) => {
+            chan.send_message(&ctx, |m| {
+                m.content("Sorry, but you provided an invalid URL.")
+            })
+            .await?;
+
+            None
+        }
+    };
+
+    if link.is_none() {
+        return Ok(());
+    }
+    let link = link.unwrap();
 
     let cfg = Config::load();
     let source = IQDB;
-    let res = source.check_sauce(link).await;
+    let res = source.check_sauce(link.to_string()).await;
 
     if let Ok(result) = res {
         if cfg.settings().use_embeds() {
