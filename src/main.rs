@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use eyre::eyre;
 use log::info;
 use serenity::{
@@ -6,6 +8,7 @@ use serenity::{
     framework::StandardFramework,
     model::prelude::{Activity, Ready},
 };
+use tokio::time::delay_for;
 
 mod commands;
 mod config;
@@ -58,7 +61,7 @@ async fn main() -> Result<()> {
         .expect("Error creating client");
 
     info!("Starting bot...");
-    if let Err(e) = client.start().await {
+    if let Err(e) = client.start_autosharded().await {
         Err(eyre!(
             "An error occurred while running the client: {:#?}",
             e
