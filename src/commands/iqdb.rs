@@ -107,8 +107,10 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             chan.send_message(&ctx, |m| m.content(content)).await?;
         }
     } else if let Err(e) = res {
-        chan.send_message(&ctx, |m| m.content(format!("Unable to get sauce: {}", e)))
-            .await?;
+        chan.send_message(&ctx, |m| {
+            m.content(format!("Failed to execute command: {}", e))
+        })
+        .await?;
     }
 
     Ok(())
