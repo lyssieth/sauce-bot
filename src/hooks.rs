@@ -22,8 +22,19 @@ pub async fn before(ctx: &Context, msg: &Message, cmd_name: &str) -> bool {
 }
 
 #[hook]
-pub async fn after(ctx: &Context, msg: &Message, cmd_name: &str, error: Result<(), CommandError>) {
+pub async fn after(
+    ctx: &Context,
+    msg: &Message,
+    mut cmd_name: &str,
+    error: Result<(), CommandError>,
+) {
     let channel = msg.channel_id;
+
+    if msg.content.contains("sauce!nao") || msg.content.contains("sauce!saucenao") {
+        cmd_name = "saucenao:run";
+    } else if msg.content.contains("sauce!iqdb") {
+        cmd_name = "iqdb:run";
+    }
 
     if error.is_ok() {
         info!(
@@ -34,7 +45,7 @@ pub async fn after(ctx: &Context, msg: &Message, cmd_name: &str, error: Result<(
                 .await
                 .unwrap_or_else(|| "NAME_NOT_FOUND".to_string()),
             channel
-        )
+        );
     } else if let Err(e) = error {
         warn!(
             "Failed to execute command `{}` in `{}` (ID: {}): {}",
@@ -45,7 +56,9 @@ pub async fn after(ctx: &Context, msg: &Message, cmd_name: &str, error: Result<(
                 .unwrap_or_else(|| "NAME_NOT_FOUND".to_string()),
             channel,
             e
-        )
+        );
+
+        channel.send_message(&ctx, |m| m.content("Failed to execute command, due to an internal exception. Might be a good idea to run `sauce!issue`.".to_string())).await.unwrap();
     }
 }
 
