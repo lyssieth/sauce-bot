@@ -8,7 +8,6 @@ use serenity::{
     model::channel::Message,
 };
 use url::Url;
-
 use crate::config::Config;
 
 #[group()]
@@ -22,14 +21,14 @@ struct Saucenao;
 #[bucket("saucenao-30s")]
 #[bucket("saucenao-24h")]
 async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let chan = msg.channel_id;
+    let channel = msg.channel_id;
     let link: Option<Url> = match args.single::<Url>() {
         Ok(url) => Some(url),
         Err(_) => {
-            chan.send_message(&ctx, |m| {
+            channel.send_message(&ctx, |m| {
                 m.content("Sorry, but you provided an invalid URL.")
             })
-            .await?;
+                .await?;
 
             None
         }
@@ -47,7 +46,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
     if let Ok(result) = res {
         if cfg.settings().use_embeds() {
-            chan.send_message(&ctx, |m| {
+            channel.send_message(&ctx, |m| {
                 m.embed(|c| {
                     c.title("Results").color((139, 216, 198)).field(
                         "Original Link",
@@ -80,7 +79,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                     c
                 })
             })
-            .await?;
+                .await?;
         } else {
             let mut lines = Vec::new();
 
@@ -107,13 +106,13 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 a
             };
 
-            chan.send_message(&ctx, |m| m.content(content)).await?;
+            channel.send_message(&ctx, |m| m.content(content)).await?;
         }
     } else if let Err(e) = res {
-        chan.send_message(&ctx, |m| {
+        channel.send_message(&ctx, |m| {
             m.content(format!("Failed to execute command: {}", e))
         })
-        .await?;
+            .await?;
     }
 
     Ok(())

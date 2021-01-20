@@ -4,16 +4,11 @@ edition = "2018"
 name = "sauce_bot"
 version = "0.1.0"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[profile.release]
-lto = true
-
 [dependencies]
 eyre = "0.6"
 log = "0.4"
 pretty_env_logger = "0.4"
-sauce-api = "0.6.1-alpha2"
+sauce-api = "0.6.1-alpha3"
 serde = { version = "1.0", features = ["derive"] }
 serenity = "0.10"
 smart-default = "0.6"

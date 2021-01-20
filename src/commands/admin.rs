@@ -18,10 +18,10 @@ struct Admin;
 #[max_args(1)]
 async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let mut self_user = ctx.cache.current_user().await;
-    let chan = msg.channel_id;
+    let channel = msg.channel_id;
 
     if args.is_empty() {
-        chan.send_message(&ctx, |m| {
+        channel.send_message(&ctx, |m| {
             m.content(format!("Current name is: `{}`", self_user.name))
         })
         .await?;
@@ -29,7 +29,7 @@ async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         let name = args.single::<String>()?;
 
         if name.is_empty() || name.len() > 32 {
-            chan.send_message(&ctx, |m| {
+            channel.send_message(&ctx, |m| {
                 m.content(format!("Expected length of 1-32, got {}", name.len()))
             })
             .await?;
@@ -37,7 +37,7 @@ async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         }
 
         self_user.edit(&ctx, |e| e.username(&name)).await?;
-        chan.send_message(&ctx, |m| m.content(format!("Set name to {}", name)))
+        channel.send_message(&ctx, |m| m.content(format!("Set name to {}", name)))
             .await?;
     }
 
@@ -49,10 +49,10 @@ async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 #[max_args(1)]
 async fn avatar(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let mut self_user = ctx.cache.current_user().await;
-    let chan = msg.channel_id;
+    let channel = msg.channel_id;
 
     if args.is_empty() {
-        chan.send_message(&ctx, |m| {
+        channel.send_message(&ctx, |m| {
             m.content(format!(
                 "Current avatar: {}",
                 self_user
@@ -67,7 +67,7 @@ async fn avatar(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         self_user
             .edit(&ctx, |e| e.avatar(Some(new_avatar.as_str())))
             .await?;
-        chan.send_message(&ctx, |m| m.content(format!("Set avatar to {}", new_avatar)))
+        channel.send_message(&ctx, |m| m.content(format!("Set avatar to {}", new_avatar)))
             .await?;
     }
 
