@@ -6,15 +6,17 @@ version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.release]
+lto = true
+
 [dependencies]
 eyre = "0.6"
 log = "0.4"
 pretty_env_logger = "0.4"
 sauce-api = "0.6.1-alpha2"
-serde = "1.0"
-serde_derive = "1.0"
-serenity = "0.9"
+serde = { version = "1.0", features = ["derive"] }
+serenity = "0.10"
 smart-default = "0.6"
-tokio = {version = "0.2", features = ["macros"]}
+tokio = { version = "1.0", features = ["full"] }
 toml = "0.5"
 url = "2.2"

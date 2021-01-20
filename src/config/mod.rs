@@ -1,6 +1,6 @@
 use std::{collections::HashSet, fs::OpenOptions, io::Read, io::Write, path::PathBuf};
 
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use serenity::model::id::UserId;
 use smart_default::SmartDefault;
 
