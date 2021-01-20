@@ -8,8 +8,8 @@ use serenity::{
     model::channel::Message,
 };
 use url::Url;
-
 use crate::config::Config;
+use log::error;
 
 #[group()]
 #[prefix("iqdb")]
@@ -111,6 +111,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             m.content(format!("Failed to execute command: {}", e))
         })
         .await?;
+        error!("Failed to execute: {}", e);
     }
 
     Ok(())

@@ -9,6 +9,7 @@ use serenity::{
 };
 use url::Url;
 use crate::config::Config;
+use log::error;
 
 #[group()]
 #[prefixes("saucenao", "nao")]
@@ -113,6 +114,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             m.content(format!("Failed to execute command: {}", e))
         })
             .await?;
+        error!("Failed to execute: {}", e);
     }
 
     Ok(())
