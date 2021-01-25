@@ -55,16 +55,27 @@ async fn avatar(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let channel = msg.channel_id;
 
     if args.is_empty() {
-        channel
-            .send_message(&ctx, |m| {
-                m.content(format!(
-                    "Current avatar: {}",
-                    self_user
-                        .avatar_url()
-                        .unwrap_or_else(|| { self_user.default_avatar_url() })
-                ))
-            })
-            .await?;
+        if msg.attachments.is_empty() {
+            channel
+                .send_message(&ctx, |m| {
+                    m.content(format!(
+                        "Current avatar: {}",
+                        self_user
+                            .avatar_url()
+                            .unwrap_or_else(|| { self_user.default_avatar_url() })
+                    ))
+                })
+                .await?;
+        } else {
+            let new_avatar = &msg.attachments[0].url;
+
+            self_user
+                .edit(&ctx, |e| e.avatar(Some(new_avatar.as_str())))
+                .await?;
+            channel
+                .send_message(&ctx, |m| m.content(format!("Set avatar to {}", new_avatar)))
+                .await?;
+        }
     } else {
         let new_avatar = args.single::<String>()?;
 
