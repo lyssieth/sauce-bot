@@ -4,6 +4,12 @@ edition = "2018"
 name = "sauce_bot"
 version = "0.1.0"
 
+[profile.dev]
+lto = false
+
+[profile.release]
+lto = true
+
 [dependencies]
 eyre = "0.6"
 log = "0.4"
