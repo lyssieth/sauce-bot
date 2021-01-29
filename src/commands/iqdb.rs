@@ -23,15 +23,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let channel = msg.channel_id;
     let link: Option<Url> = match args.single::<Url>() {
         Ok(url) => Some(url),
-        Err(_) => {
-            channel
-                .send_message(&ctx, |m| {
-                    m.content("Sorry, but you provided an invalid URL.")
-                })
-                .await?;
-
-            None
-        }
+        Err(_) => None,
     };
 
     let link = match link {
@@ -50,6 +42,8 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if link.is_none() {
         channel
             .send_message(&ctx, |m| {
+                m.reference_message(msg)
+                    .allowed_mentions(|a| a.empty_parse());
                 m.content("No image was provided, whether by link or attachment.")
             })
             .await?;
@@ -65,6 +59,8 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         if cfg.settings().use_embeds() {
             channel
                 .send_message(&ctx, |m| {
+                    m.reference_message(msg)
+                        .allowed_mentions(|a| a.empty_parse());
                     m.embed(|c| {
                         c.title("Results").color((139, 216, 198)).field(
                             "Original Link",
@@ -124,11 +120,19 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 a
             };
 
-            channel.send_message(&ctx, |m| m.content(content)).await?;
+            channel
+                .send_message(&ctx, |m| {
+                    m.reference_message(msg)
+                        .allowed_mentions(|a| a.empty_parse())
+                        .content(content)
+                })
+                .await?;
         }
     } else if let Err(e) = res {
         channel
             .send_message(&ctx, |m| {
+                m.reference_message(msg)
+                    .allowed_mentions(|a| a.empty_parse());
                 m.content(format!("Failed to execute command: {}", e))
             })
             .await?;

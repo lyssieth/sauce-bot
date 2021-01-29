@@ -23,6 +23,8 @@ async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if args.is_empty() {
         channel
             .send_message(&ctx, |m| {
+                m.reference_message(msg)
+                    .allowed_mentions(|a| a.empty_parse());
                 m.content(format!("Current name is: `{}`", self_user.name))
             })
             .await?;
@@ -32,6 +34,8 @@ async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         if name.is_empty() || name.len() > 32 {
             channel
                 .send_message(&ctx, |m| {
+                    m.reference_message(msg)
+                        .allowed_mentions(|a| a.empty_parse());
                     m.content(format!("Expected length of 1-32, got {}", name.len()))
                 })
                 .await?;
@@ -40,7 +44,11 @@ async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
         self_user.edit(&ctx, |e| e.username(&name)).await?;
         channel
-            .send_message(&ctx, |m| m.content(format!("Set name to {}", name)))
+            .send_message(&ctx, |m| {
+                m.reference_message(msg)
+                    .allowed_mentions(|a| a.empty_parse())
+                    .content(format!("Set name to {}", name))
+            })
             .await?;
     }
 
@@ -58,6 +66,8 @@ async fn avatar(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         if msg.attachments.is_empty() {
             channel
                 .send_message(&ctx, |m| {
+                    m.reference_message(msg)
+                        .allowed_mentions(|a| a.empty_parse());
                     m.content(format!(
                         "Current avatar: {}",
                         self_user
@@ -73,7 +83,11 @@ async fn avatar(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 .edit(&ctx, |e| e.avatar(Some(new_avatar.as_str())))
                 .await?;
             channel
-                .send_message(&ctx, |m| m.content(format!("Set avatar to {}", new_avatar)))
+                .send_message(&ctx, |m| {
+                    m.reference_message(msg)
+                        .allowed_mentions(|a| a.empty_parse())
+                        .content(format!("Set avatar to {}", new_avatar))
+                })
                 .await?;
         }
     } else {
@@ -83,7 +97,11 @@ async fn avatar(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             .edit(&ctx, |e| e.avatar(Some(new_avatar.as_str())))
             .await?;
         channel
-            .send_message(&ctx, |m| m.content(format!("Set avatar to {}", new_avatar)))
+            .send_message(&ctx, |m| {
+                m.reference_message(msg)
+                    .allowed_mentions(|a| a.empty_parse())
+                    .content(format!("Set avatar to {}", new_avatar))
+            })
             .await?;
     }
 
