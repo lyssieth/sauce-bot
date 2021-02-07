@@ -14,10 +14,10 @@ lto = true
 eyre = "0.6"
 log = "0.4"
 pretty_env_logger = "0.4"
-sauce-api = "0.6.1-alpha3"
+sauce-api = "0.7.0-alpha1"
 serde = { version = "1.0", features = ["derive"] }
 serenity = "0.10"
 smart-default = "0.6"
-tokio = { version = "1.0", features = ["full"] }
+tokio = { version = "1.2", features = ["full"] }
 toml = "0.5"
 url = "2.2"
