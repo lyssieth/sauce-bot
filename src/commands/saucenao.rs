@@ -57,7 +57,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let cfg = Config::load();
     let mut source = SauceNao::new();
     source.set_api_key(cfg.credentials().saucenao_api_key().clone());
-    let res = source.check_sauce(link.to_string()).await;
+    let res = source.check_sauce(link.as_ref()).await;
 
     if let Ok(result) = res {
         if cfg.settings().use_embeds() {

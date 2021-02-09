@@ -53,7 +53,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
     let cfg = Config::load();
     let source = IQDB;
-    let res = source.check_sauce(link.to_string()).await;
+    let res = source.check_sauce(link.as_ref()).await;
 
     if let Ok(result) = res {
         if cfg.settings().use_embeds() {
