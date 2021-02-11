@@ -81,7 +81,7 @@ impl Credentials {
 pub(crate) struct Settings {
     #[default = "sauce!"]
     prefix: String,
-    #[default = false]
+    #[default = true]
     use_embeds: bool,
     #[default = 5]
     top_links: u8,

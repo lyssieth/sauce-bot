@@ -17,7 +17,7 @@ struct Basic;
 async fn issue(ctx: &Context, msg: &Message) -> CommandResult {
     msg.reply(
         &ctx,
-        "To report an issue, please go to https://github.com/lyssieth/sauce-bot/issues",
+        "To report an issue, please go to <https://github.com/lyssieth/sauce-bot/issues>",
     )
     .await?;
 

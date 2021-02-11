@@ -29,6 +29,11 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         Err(_) => None,
     };
 
+    let num: Option<usize> = match args.single::<usize>() {
+        Ok(amt) => Some(amt),
+        Err(_) => None,
+    };
+
     let link = match link {
         None => {
             if msg.attachments.is_empty() {
@@ -72,7 +77,11 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                             false,
                         );
 
-                        let mut i = cfg.settings().top_links();
+                        let mut i = if let Some(num) = num {
+                            num
+                        } else {
+                            cfg.settings().top_links() as usize
+                        };
                         if result.items.is_empty() {
                             c.field(
                                 "Found zero results",
@@ -99,9 +108,13 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 })
                 .await?;
         } else {
-            let mut lines = Vec::new();
+            let mut lines = Vec::with_capacity(if let Some(num) = num {
+                num
+            } else {
+                cfg.settings().top_links() as usize
+            });
 
-            let mut i = cfg.settings().top_links();
+            let mut i = lines.capacity();
             for x in result.items {
                 i -= 1;
                 lines.push(format!("**{:0.2}%** - **<{}>**", x.similarity, x.link));
@@ -112,7 +125,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             }
 
             let content = {
-                let mut a = String::new();
+                let mut a = String::with_capacity(2000);
                 if lines.is_empty() {
                     a.push_str("Found zero results.")
                 } else {
