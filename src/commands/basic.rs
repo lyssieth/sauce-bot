@@ -1,3 +1,5 @@
+use crate::config::Config;
+use log::error;
 use serenity::{
     client::Context,
     framework::standard::{
@@ -5,9 +7,8 @@ use serenity::{
         CommandResult,
     },
     model::channel::Message,
+    prelude::Mentionable,
 };
-
-use crate::config::Config;
 
 #[group]
 #[commands(issue, help)]
@@ -30,7 +31,7 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
     let cfg = Config::load();
     let cfg = cfg.settings();
 
-    channel.send_message(&ctx, |m|
+    match channel.send_message(&ctx, |m|
         m.reference_message(msg)
             .allowed_mentions(|a| a.empty_parse()).embed(|e|
                 e.title("Help")
@@ -41,7 +42,23 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
                     .field("sauce!help", "Provides help about the bot.", false)
                     .color((139, 216, 198))
             )
-        ).await?;
+        ).await {
+            Ok(_) => {}
+            Err(err) => {
+                error!("Failed to send help: {}", err);
+                if let Some(channel) = channel.to_channel(&ctx).await?.guild() {
+                    msg.author.direct_message(&ctx, |m| {
+                        m.embed(|e| {
+                            e.title("Error")
+                                .description("I failed to send the help message in the channel you requested. Information will be provided below.")
+                                .field("Channel", format!("{}", channel.mention()), false)
+                                .field("Guild", format!("{}", channel.guild_id), false)
+                                .field("Error", format!("{}", err), false)
+                        })
+                    }).await?;
+                }
+            }
+        }
 
     Ok(())
 }
