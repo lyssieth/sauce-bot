@@ -1,0 +1,8 @@
+[tasks.release]
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.package]
+command = "upx"
+args = ["target/release/sauce_bot", "-o", "sauce_bot"]
+dependencies = ["release"]
