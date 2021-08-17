@@ -72,11 +72,8 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                             false,
                         );
 
-                        let mut i = if let Some(num) = num {
-                            num
-                        } else {
-                            cfg.settings().top_links() as usize
-                        };
+                        let mut i =
+                            num.map_or_else(|| cfg.settings().top_links() as usize, |num| num);
                         if result.items.is_empty() {
                             c.field(
                                 "Found zero results",
@@ -103,11 +100,9 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 })
                 .await?;
         } else {
-            let mut lines = Vec::with_capacity(if let Some(num) = num {
-                num
-            } else {
-                cfg.settings().top_links() as usize
-            });
+            let mut lines = Vec::with_capacity(
+                num.map_or_else(|| cfg.settings().top_links() as usize, |num| num),
+            );
 
             let mut i = lines.capacity();
             for x in result.items {
@@ -122,7 +117,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             let content = {
                 let mut a = String::with_capacity(2000);
                 if lines.is_empty() {
-                    a.push_str("Found zero results.")
+                    a.push_str("Found zero results.");
                 } else {
                     for x in lines {
                         a.push_str(&x);

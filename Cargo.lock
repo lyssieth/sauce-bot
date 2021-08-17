@@ -1067,9 +1067,9 @@ checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
 name = "sauce-api"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e08f935d1cb7d062f8276f23b0e84552e43a0108fc1baab6a1a0dd9e27356ee"
+checksum = "4e1fc8013a8a72a9432efe4c4bc052c28f5fc39c0cf6b841682d4a425badf12c"
 dependencies = [
  "async-trait",
  "reqwest",
@@ -1386,9 +1386,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.9.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b7b349f11a7047e6d1276853e612d152f5e8a352c61917887cc2169e2366b4c"
+checksum = "01cf844b23c6131f624accf65ce0e4e9956a8bb329400ea5bcc26ae3a5c20b0b"
 dependencies = [
  "autocfg",
  "bytes 1.0.1",

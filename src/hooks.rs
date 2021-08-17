@@ -66,13 +66,18 @@ pub async fn after(
 pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) {
     if let DispatchError::Ratelimited(duration) = error {
         if msg.content.contains("sauce!saucenao") {
-            let _ = msg
+            let a = msg
                 .channel_id
                 .say(
                     &ctx.http,
                     &format!("Try this again in {} seconds.\n\n**Saucenao currently has a restrictive rate limit, but I will try to improve it in the future.**\n    -Lys", duration.as_secs()),
                 )
                 .await;
+
+            match a {
+                Ok(_) => {}
+                Err(e) => log::warn!("An error occurred: {}", e),
+            }
         }
     }
 }

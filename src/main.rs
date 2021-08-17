@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::wildcard_imports)]
 use eyre::eyre;
 use log::info;
 use serenity::{

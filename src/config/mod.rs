@@ -23,12 +23,7 @@ impl Config {
 
     pub(crate) fn load() -> Self {
         let path = PathBuf::from(FILE);
-        let conf = if !path.exists() {
-            let cfg = Self::default();
-            cfg.save();
-
-            cfg
-        } else {
+        let conf = if path.exists() {
             let mut file = OpenOptions::new()
                 .read(true)
                 .open(path)
@@ -39,6 +34,11 @@ impl Config {
                 .expect("Unable to read `config.toml`");
 
             toml::from_str(&content).expect("Unable to parse `config.toml`")
+        } else {
+            let cfg = Self::default();
+            cfg.save();
+
+            cfg
         };
 
         conf
@@ -103,6 +103,6 @@ impl Settings {
     }
 
     pub(crate) fn owner_ids_set(&self) -> HashSet<UserId> {
-        self.owner_ids.iter().cloned().map(UserId).collect()
+        self.owner_ids.iter().copied().map(UserId).collect()
     }
 }
