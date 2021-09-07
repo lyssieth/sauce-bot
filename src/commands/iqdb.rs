@@ -1,5 +1,5 @@
 use crate::config::Config;
-use log::error;
+use tracing::error;
 use sauce_api::prelude::*;
 use serenity::{
     client::Context,

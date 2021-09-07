@@ -1,13 +1,15 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::wildcard_imports)]
-use eyre::eyre;
-use log::info;
+use color_eyre::eyre::eyre;
+use tracing::info;
 use serenity::{
     async_trait,
     client::{Client, Context, EventHandler},
     framework::StandardFramework,
     model::prelude::{Activity, Ready},
 };
+use tracing_subscriber::{EnvFilter, fmt};
+use std::env;
 
 mod commands;
 mod config;
@@ -23,11 +25,11 @@ impl EventHandler for Handler {
     }
 }
 
-type Result<T> = eyre::Result<T>;
+type Result<T> = color_eyre::Result<T>;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    pretty_env_logger::init();
+    setup()?;
 
     let cfg = config::Config::load();
     let framework = StandardFramework::new()
@@ -68,4 +70,26 @@ async fn main() -> Result<()> {
     } else {
         Ok(())
     }
+}
+
+fn setup() -> Result<()> {
+    if env::var("RUST_LIB_BACKTRACE").is_err() {
+        #[cfg(debug_assertions)]
+            env::set_var("RUST_LIB_BACKTRACE", "1");
+        #[cfg(not(debug_assertions))]
+            env::set_var("RUST_LIB_BACKTRACE", "0");
+    }
+    color_eyre::install()?;
+
+    if env::var("RUST_LOG").is_err() {
+        #[cfg(debug_assertions)]
+            env::set_var("RUST_LOG", "sauce_bot=debug,serenity=info,hyper=info,reqwest=info,tungstenite=info");
+        #[cfg(not(debug_assertions))]
+            env::set_var("RUST_LOG", "sauce_bot=info");
+    }
+    fmt::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+
+    Ok(())
 }

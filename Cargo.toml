@@ -1,8 +1,9 @@
 [package]
 authors = ["Lyssieth <raxixor@rax.ee>"]
-edition = "2018"
+edition = "2021"
 name = "sauce_bot"
 version = "0.1.0"
+publish = false
 
 [profile.dev]
 lto = false
@@ -11,9 +12,9 @@ lto = false
 lto = true
 
 [dependencies]
-eyre = "0.6"
-log = "0.4"
-pretty_env_logger = "0.4"
+color-eyre = "0.5"
+tracing = "0.1"
+tracing-subscriber = "0.2"
 sauce-api = { version = "0.9", default-features = false, features = [
     "iqdb",
     "saucenao",
@@ -22,6 +23,6 @@ sauce-api = { version = "0.9", default-features = false, features = [
 serde = { version = "1.0", features = ["derive"] }
 serenity = "0.10"
 smart-default = "0.6"
-tokio = { version = "1.10", features = ["full"] }
+tokio = { version = "1.11", features = ["full"] }
 toml = "0.5"
 url = "2.2"

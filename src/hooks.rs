@@ -1,4 +1,4 @@
-use log::{info, warn};
+use tracing::{info, warn};
 use serenity::framework::standard::CommandError;
 use serenity::framework::standard::{macros::hook, DispatchError};
 use serenity::model::prelude::Message;
@@ -8,13 +8,15 @@ use serenity::prelude::Context;
 pub async fn before(ctx: &Context, msg: &Message, cmd_name: &str) -> bool {
     let channel = msg.channel_id;
 
+    let name = channel
+        .name(&ctx)
+        .await
+        .unwrap_or_else(|| "NAME_NOT_FOUND".to_string());
+
     info!(
         "Executing command `{}` in channel `{}` (ID: {})",
         cmd_name,
-        channel
-            .name(&ctx)
-            .await
-            .unwrap_or_else(|| "NAME_NOT_FOUND".to_string()),
+        name.as_str(),
         channel
     );
 
@@ -36,24 +38,23 @@ pub async fn after(
         cmd_name = "iqdb:run";
     }
 
+    let name = channel
+        .name(&ctx)
+        .await
+        .unwrap_or_else(|| "NAME_NOT_FOUND".to_string());
+
     if error.is_ok() {
         info!(
             "Executed command `{}` in `{}` (ID: {})",
             cmd_name,
-            channel
-                .name(&ctx)
-                .await
-                .unwrap_or_else(|| "NAME_NOT_FOUND".to_string()),
+            name.as_str(),
             channel
         );
     } else if let Err(e) = error {
         warn!(
             "Failed to execute command `{}` in `{}` (ID: {}): {}",
             cmd_name,
-            channel
-                .name(&ctx)
-                .await
-                .unwrap_or_else(|| "NAME_NOT_FOUND".to_string()),
+            name.as_str(),
             channel,
             e
         );
@@ -76,7 +77,7 @@ pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) 
 
             match a {
                 Ok(_) => {}
-                Err(e) => log::warn!("An error occurred: {}", e),
+                Err(e) => tracing::warn!("An error occurred: {}", e),
             }
         }
     }
