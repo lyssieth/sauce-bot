@@ -71,7 +71,7 @@ pub async fn dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) 
                 .channel_id
                 .say(
                     &ctx.http,
-                    &format!("Try this again in {} seconds.\n\n**Saucenao currently has a restrictive rate limit, but I will try to improve it in the future.**\n    -Lys", duration.as_secs()),
+                    &format!("Try this again in {} seconds.\n\n**Saucenao has a restrictive time limit, so if you want it raised, please support my patreon. `sauce!support`**\n    - Lys", duration.as_secs()),
                 )
                 .await;
 
