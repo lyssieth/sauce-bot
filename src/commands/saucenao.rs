@@ -1,5 +1,4 @@
 use crate::config::Config;
-use tracing::error;
 use sauce_api::prelude::*;
 use serenity::{
     client::Context,
@@ -9,6 +8,7 @@ use serenity::{
     },
     model::channel::Message,
 };
+use tracing::error;
 use url::Url;
 
 #[group()]
@@ -51,7 +51,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         channel
             .send_message(&ctx, |m| {
                 m.reference_message(msg)
-                    .allowed_mentions(|a| a.empty_parse());
+                    .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse);
                 m.content("No image was provided, whether by link or attachment.")
             })
             .await?;
@@ -69,7 +69,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             channel
                 .send_message(&ctx, |m| {
                     m.reference_message(msg)
-                        .allowed_mentions(|a| a.empty_parse());
+                        .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse);
                     m.embed(|c| {
                         c.title("Results").color((139, 216, 198)).field(
                             "Original Link",
@@ -135,7 +135,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             channel
                 .send_message(&ctx, |m| {
                     m.reference_message(msg)
-                        .allowed_mentions(|a| a.empty_parse())
+                        .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse)
                         .content(content)
                 })
                 .await?;
@@ -144,7 +144,7 @@ async fn run(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         channel
             .send_message(&ctx, |m| {
                 m.reference_message(msg)
-                    .allowed_mentions(|a| a.empty_parse());
+                    .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse);
                 m.content(format!("Failed to execute command: {}", e))
             })
             .await?;

@@ -24,7 +24,7 @@ async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         channel
             .send_message(&ctx, |m| {
                 m.reference_message(msg)
-                    .allowed_mentions(|a| a.empty_parse());
+                    .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse);
                 m.content(format!("Current name is: `{}`", self_user.name))
             })
             .await?;
@@ -35,7 +35,7 @@ async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             channel
                 .send_message(&ctx, |m| {
                     m.reference_message(msg)
-                        .allowed_mentions(|a| a.empty_parse());
+                        .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse);
                     m.content(format!("Expected length of 1-32, got {}", name.len()))
                 })
                 .await?;
@@ -46,7 +46,7 @@ async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         channel
             .send_message(&ctx, |m| {
                 m.reference_message(msg)
-                    .allowed_mentions(|a| a.empty_parse())
+                    .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse)
                     .content(format!("Set name to {}", name))
             })
             .await?;
@@ -67,7 +67,7 @@ async fn avatar(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             channel
                 .send_message(&ctx, |m| {
                     m.reference_message(msg)
-                        .allowed_mentions(|a| a.empty_parse());
+                        .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse);
                     m.content(format!(
                         "Current avatar: {}",
                         self_user
@@ -85,7 +85,7 @@ async fn avatar(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             channel
                 .send_message(&ctx, |m| {
                     m.reference_message(msg)
-                        .allowed_mentions(|a| a.empty_parse())
+                        .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse)
                         .content(format!("Set avatar to {}", new_avatar))
                 })
                 .await?;
@@ -99,7 +99,7 @@ async fn avatar(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         channel
             .send_message(&ctx, |m| {
                 m.reference_message(msg)
-                    .allowed_mentions(|a| a.empty_parse())
+                    .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse)
                     .content(format!("Set avatar to {}", new_avatar))
             })
             .await?;
