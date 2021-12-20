@@ -4,8 +4,6 @@ use serde::{Deserialize, Serialize};
 use serenity::model::id::UserId;
 use smart_default::SmartDefault;
 
-const FILE: &str = "config.toml";
-
 #[derive(Debug, Clone, PartialOrd, PartialEq, Hash, Default, Serialize, Deserialize)]
 pub(crate) struct Config {
     credentials: Credentials,
@@ -13,6 +11,14 @@ pub(crate) struct Config {
 }
 
 impl Config {
+    fn get_path() -> PathBuf {
+        if option_env!("CONTAINER") == Some("true") {
+            PathBuf::from("/config/config.toml")
+        } else {
+            PathBuf::from("./config.toml")
+        }
+    }
+
     pub(crate) fn credentials(&self) -> &Credentials {
         &self.credentials
     }
@@ -22,7 +28,7 @@ impl Config {
     }
 
     pub(crate) fn load() -> Self {
-        let path = PathBuf::from(FILE);
+        let path = Self::get_path();
         let conf = if path.exists() {
             let mut file = OpenOptions::new()
                 .read(true)
@@ -45,7 +51,7 @@ impl Config {
     }
 
     pub(crate) fn save(&self) {
-        let path = PathBuf::from(FILE);
+        let path = Self::get_path();
         let content = toml::to_string_pretty(self).expect("Unable to parse Config object");
 
         let mut file = OpenOptions::new()
