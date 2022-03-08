@@ -58,6 +58,22 @@ pub async fn after(
         cmd_name = "iqdb:run";
     }
 
+    let content = &msg.content;
+
+    let mut msg = msg.clone();
+
+    let res = msg
+        .edit(ctx, |e| {
+            e.content(format!(
+                "{content}\n\n**WARNING: This bot is soon switching to slash commands."
+            ))
+        })
+        .await;
+
+    if let Err(e) = res {
+        warn!("Failed to edit message: {:?}", e);
+    }
+
     if error.is_ok() {
         info!(
             "Executed command `{}` in `{}` (ID: {})",

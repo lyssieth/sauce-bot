@@ -12,9 +12,9 @@ lto = false
 lto = true
 
 [dependencies]
-color-eyre = "0.6.0"
-tracing = "0.1.30"
-tracing-subscriber = { version = "0.3.8", features = ["env-filter"] }
+color-eyre = "0.6.1"
+tracing = "0.1.31"
+tracing-subscriber = { version = "0.3.9", features = ["env-filter"] }
 sauce-api = { version = "0.9.3", default-features = false, features = [
     "iqdb",
     "saucenao",
@@ -23,6 +23,6 @@ sauce-api = { version = "0.9.3", default-features = false, features = [
 serde = { version = "1.0.136", features = ["derive"] }
 serenity = "0.10.10"
 smart-default = "0.6.0"
-tokio = { version = "1.16.1", features = ["full"] }
+tokio = { version = "1.17.0", features = ["full"] }
 toml = "0.5.8"
 url = "2.2.2"
