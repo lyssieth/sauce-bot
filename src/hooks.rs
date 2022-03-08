@@ -58,21 +58,21 @@ pub async fn after(
         cmd_name = "iqdb:run";
     }
 
-    let content = &msg.content;
+    let m = msg
+        .reply_ping(
+            ctx,
+            "**Warning: This bot is switching to slash commands soon. Please take care.**\n\nthis message will self destruct in 20 seconds",
+        )
+        .await
+        .unwrap();
 
-    let mut msg = msg.clone();
+    let sp = ctx.clone();
 
-    let res = msg
-        .edit(ctx, |e| {
-            e.content(format!(
-                "{content}\n\n**WARNING: This bot is soon switching to slash commands."
-            ))
-        })
-        .await;
-
-    if let Err(e) = res {
-        warn!("Failed to edit message: {:?}", e);
-    }
+    // hopefully set up the self destruct timer
+    tokio::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(20)).await;
+        m.delete(sp).await.unwrap();
+    });
 
     if error.is_ok() {
         info!(
