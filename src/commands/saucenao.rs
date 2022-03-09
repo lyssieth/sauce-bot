@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{lazy::SyncLazy, sync::Arc, time::Duration};
 
 use crate::{
     config::Config,
@@ -6,7 +6,9 @@ use crate::{
     Context, Res,
 };
 use async_trait::async_trait;
+use r8limit::RateLimiter;
 use sauce_api::prelude::*;
+use tokio::sync::RwLock;
 use tracing::error;
 use twilight_embed_builder::EmbedBuilder;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
@@ -20,6 +22,32 @@ use url::Url;
 pub fn get() -> Vec<ApplicationCommandData> {
     vec![Saucenao::create_command()]
 }
+
+struct RateLimits {
+    short_usage: RateLimiter,
+    long_usage: RateLimiter,
+}
+
+impl RateLimits {
+    pub fn limited(&mut self) -> bool {
+        let a = self.short_usage.attempt();
+        let b = self.long_usage.attempt();
+
+        a || b
+    }
+}
+
+impl Default for RateLimits {
+    fn default() -> Self {
+        Self {
+            short_usage: RateLimiter::new(6, Duration::from_secs(30)),
+            long_usage: RateLimiter::new(200, Duration::from_secs(24 * 60 * 60)),
+        }
+    }
+}
+
+static mut RATE_LIMITS: SyncLazy<RwLock<RateLimits>> =
+    SyncLazy::new(|| RwLock::new(RateLimits::default()));
 
 #[derive(CreateCommand, CommandModel)]
 #[command(
@@ -155,6 +183,12 @@ impl Saucenao {
 #[async_trait]
 impl Cmd for Saucenao {
     async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
+        let mut rate_limits = unsafe { RATE_LIMITS.write().await };
+
+        if rate_limits.limited() {
+            return Ok(());
+        }
+
         let interaction_client = ctx.interaction_client();
 
         if self.link.is_none() && self.attachment.is_none() {

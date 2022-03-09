@@ -89,80 +89,76 @@ pub(crate) async fn interaction_create(
 
     let input_data: CommandInputData = data.into();
 
-    match name.as_str() {
-        "help" => {
-            let help_command = HelpCommand::from_interaction(input_data)?;
+    let cmd = Command {
+        name: name.clone(),
+        interaction_id,
+        command_id,
+        token,
+    };
 
-            let cmd = Command {
-                name,
-                interaction_id,
-                command_id,
-                token,
-            };
+    before(&cmd);
 
-            help_command.execute(ctx, cmd).await?;
+    let res = {
+        let ctx = ctx.clone();
+        let cmd = cmd.clone();
+
+        match name.as_str() {
+            "help" => {
+                let help_command = HelpCommand::from_interaction(input_data)?;
+
+                help_command.execute(ctx, cmd).await
+            }
+
+            "issue" => {
+                let issue_command = IssueCommand::from_interaction(input_data)?;
+
+                issue_command.execute(ctx, cmd).await
+            }
+
+            "support" => {
+                let support_command = SupportCommand::from_interaction(input_data)?;
+
+                support_command.execute(ctx, cmd).await
+            }
+
+            "iqdb" => {
+                let iqdb_command = Iqdb::from_interaction(input_data)?;
+
+                iqdb_command.execute(ctx, cmd).await
+            }
+
+            "saucenao" => {
+                let saucenao_command = Saucenao::from_interaction(input_data)?;
+
+                saucenao_command.execute(ctx, cmd).await
+            }
+
+            _ => {
+                debug!("Unhandled interaction: {}", name);
+
+                return Ok(());
+            }
         }
+    };
 
-        "issue" => {
-            let issue_command = IssueCommand::from_interaction(input_data)?;
-
-            let cmd = Command {
-                name,
-                interaction_id,
-                command_id,
-                token,
-            };
-
-            issue_command.execute(ctx, cmd).await?;
-        }
-
-        "support" => {
-            let support_command = SupportCommand::from_interaction(input_data)?;
-
-            let cmd = Command {
-                name,
-                interaction_id,
-                command_id,
-                token,
-            };
-
-            support_command.execute(ctx, cmd).await?;
-        }
-
-        "iqdb" => {
-            let iqdb_command = Iqdb::from_interaction(input_data)?;
-
-            let cmd = Command {
-                name,
-                interaction_id,
-                command_id,
-                token,
-            };
-
-            iqdb_command.execute(ctx, cmd).await?;
-        }
-
-        "saucenao" => {
-            let saucenao_command = Saucenao::from_interaction(input_data)?;
-
-            let cmd = Command {
-                name,
-                interaction_id,
-                command_id,
-                token,
-            };
-
-            saucenao_command.execute(ctx, cmd).await?;
-        }
-
-        _ => {
-            debug!("Unhandled interaction: {}", name);
-        }
-    }
+    after(&cmd, res);
 
     Ok(())
 }
 
+fn before(cmd: &Command) {
+    info!("Executing command {}", cmd.name);
+}
+
+fn after(cmd: &Command, res: Res<()>) {
+    if let Err(e) = res {
+        error!(?e, "Failed to execute {}", cmd.name);
+    } else {
+        info!("Successfully executed {}", cmd.name);
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct Command {
     pub name: String,
     pub interaction_id: Id<InteractionMarker>,

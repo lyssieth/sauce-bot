@@ -1,4 +1,4 @@
-FROM rust:latest as builder
+FROM rustlang/rust:nightly as builder
 
 LABEL name="lyssieth/sauce-bot"
 LABEL maintainer="Lyssieth <lyssieth@rax.ee>"

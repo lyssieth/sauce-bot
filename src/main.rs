@@ -1,5 +1,7 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::wildcard_imports)]
+#![feature(once_cell)]
+
 pub use context::Context;
 use futures::StreamExt;
 use std::{env, sync::Arc};
@@ -12,7 +14,6 @@ mod commands;
 mod config;
 mod context;
 mod events;
-mod hooks;
 
 async fn handle_event(shard_id: u64, event: Event, ctx: Arc<Context>) -> Res<()> {
     let res = match event {
