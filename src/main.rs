@@ -1,91 +1,99 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::wildcard_imports)]
-use color_eyre::eyre::eyre;
-use tracing::info;
-use serenity::{
-    async_trait,
-    client::{Client, Context, EventHandler},
-    framework::StandardFramework,
-    model::prelude::{Activity, Ready},
-};
-use tracing_subscriber::{EnvFilter, fmt};
-use std::env;
+pub use context::Context;
+use futures::StreamExt;
+use std::{env, sync::Arc};
+use tracing::{error, info};
+use tracing_subscriber::{fmt, EnvFilter};
+use twilight_gateway::{cluster::ShardScheme, Cluster, Event, Intents};
+use twilight_http::Client as HttpClient;
 
 mod commands;
 mod config;
+mod context;
+mod events;
 mod hooks;
 mod util;
 
-struct Handler;
+async fn handle_event(shard_id: u64, event: Event, ctx: Arc<Context>) -> Res<()> {
+    let res = match event {
+        Event::Ready(ready) => events::ready(shard_id, ctx, ready).await,
+        Event::InteractionCreate(interaction) => {
+            events::interaction_create(shard_id, ctx, interaction).await
+        }
 
-#[async_trait]
-impl EventHandler for Handler {
-    async fn ready(&self, ctx: Context, _data_about_bot: Ready) {
-        ctx.set_activity(Activity::playing("sauce!help")).await;
+        _ => {
+            // debug!("Unhandled event {event:?}");
+            Ok(())
+        }
+    };
+
+    if let Err(e) = res {
+        error!("Error handling event: {e}");
     }
+
+    Ok(())
 }
 
-type Result<T> = color_eyre::Result<T>;
+type Res<T> = color_eyre::Result<T>;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Res<()> {
     setup()?;
 
     let cfg = config::Config::load();
-    let framework = StandardFramework::new()
-        .configure(|c| {
-            c.allow_dm(true)
-                .by_space(true)
-                .prefix(cfg.settings().prefix())
-                .owners(cfg.settings().owner_ids_set())
-                .no_dm_prefix(false)
-                .ignore_bots(true)
-                .ignore_webhooks(true)
-                .case_insensitivity(true)
-        })
-        .before(hooks::before)
-        .after(hooks::after)
-        .on_dispatch_error(hooks::dispatch_error)
-        .bucket("saucenao-30s", |b| b.limit(6).time_span(30))
-        .await
-        .bucket("saucenao-24h", |b| b.limit(200).time_span(24 * 60 * 60))
-        .await
-        .group(&commands::BASIC_GROUP)
-        .group(&commands::IQDB_GROUP)
-        .group(&commands::SAUCENAO_GROUP)
-        .group(&commands::ADMIN_GROUP);
+    let token = cfg.credentials().token();
 
-    let mut client = Client::builder(cfg.credentials().token())
-        .event_handler(Handler)
-        .framework(framework)
-        .await
-        .expect("Error creating client");
+    let scheme = ShardScheme::Auto;
 
-    info!("Starting bot...");
-    if let Err(e) = client.start_autosharded().await {
-        Err(eyre!(
-            "An error occurred while running the client: {:#?}",
-            e
-        ))
-    } else {
-        Ok(())
+    let (cluster, mut events) = Cluster::builder(token.clone(), Intents::empty())
+        .shard_scheme(scheme)
+        .build()
+        .await?;
+    let cluster = Arc::new(cluster);
+
+    let cluster_spawn = Arc::clone(&cluster);
+
+    info!("Starting cluster...");
+    tokio::spawn(async move {
+        cluster_spawn.up().await;
+    });
+
+    let http = Arc::new(HttpClient::new(token.clone()));
+
+    let application_id = {
+        let req = http.current_user_application().exec().await?;
+
+        req.model().await?.id
+    };
+
+    let ctx = Arc::new(Context {
+        cluster,
+        http,
+        application_id,
+    });
+
+    while let Some((shard_id, event)) = events.next().await {
+        tokio::spawn(handle_event(shard_id, event, ctx.clone()));
     }
+
+    Ok(())
 }
 
-fn setup() -> Result<()> {
+fn setup() -> Res<()> {
     if env::var("RUST_LIB_BACKTRACE").is_err() {
         #[cfg(debug_assertions)]
-            env::set_var("RUST_LIB_BACKTRACE", "1");
+        env::set_var("RUST_LIB_BACKTRACE", "1");
         #[cfg(not(debug_assertions))]
-            env::set_var("RUST_LIB_BACKTRACE", "0");
+        env::set_var("RUST_LIB_BACKTRACE", "0");
     }
     color_eyre::install()?;
 
     if env::var("RUST_LOG").is_err() {
         #[cfg(debug_assertions)]
-            env::set_var("RUST_LOG", "sauce_bot=debug,serenity=info,hyper=info,reqwest=info,tungstenite=info");
+        env::set_var("RUST_LOG", "sauce_bot=debug");
         #[cfg(not(debug_assertions))]
-            env::set_var("RUST_LOG", "sauce_bot=info");
+        env::set_var("RUST_LOG", "sauce_bot=info");
     }
     fmt::fmt()
         .with_env_filter(EnvFilter::from_default_env())

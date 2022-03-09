@@ -1,82 +1,153 @@
-use crate::config::Config;
-use serenity::{
-    client::Context,
-    framework::standard::{
-        macros::{command, group},
-        CommandResult,
-    },
-    model::channel::Message,
-    prelude::Mentionable,
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use twilight_embed_builder::EmbedBuilder;
+use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
+use twilight_model::{
+    application::callback::InteractionResponse,
+    channel::{embed::EmbedField, message::MessageFlags},
 };
-use tracing::error;
+use twilight_util::builder::CallbackDataBuilder;
 
-#[group]
-#[commands(support, issue, help)]
-struct Basic;
+use crate::{
+    config::Config,
+    events::{Cmd, Command},
+    Context, Res,
+};
 
-#[command]
-async fn issue(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply(
-        &ctx,
-        "To report an issue, please go to <https://github.com/lyssieth/sauce-bot/issues>",
-    )
-    .await?;
+pub fn get() -> Vec<ApplicationCommandData> {
+    let help = HelpCommand::create_command();
 
-    Ok(())
+    let issue = IssueCommand::create_command();
+    let support = SupportCommand::create_command();
+
+    vec![help, issue, support]
 }
 
-#[command]
-async fn support(ctx: &Context, msg: &Message) -> CommandResult {
-    let channel = msg.channel_id;
+#[derive(CommandModel, CreateCommand)]
+#[command(name = "help", desc = "Provides help for SauceBot")]
+pub struct HelpCommand;
 
-    channel.send_message(ctx, |m| {
-        m.reference_message(msg)
-            .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse).embed(|e| {
-                e.title("Support")
-                    .description("All the ways to support SauceBot.\n\nAny money gained through this will first go towards the VPS and SauceNao rate limits, after which it will go into my pocket.")
-                    .field("Patreon", "Monthly only. [Link](https://www.patreon.com/lyssieth)", false)
-                    .field("Github Sponsor", "Both one-time and monthly. [Link](https://github.com/sponsors/lyssieth)", false)
-        })
-    }).await?;
+#[async_trait]
+impl Cmd for HelpCommand {
+    async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
+        let interaction_client = ctx.interaction_client();
 
-    Ok(())
+        let cfg = Config::load();
+        let cfg = cfg.settings();
+
+        let embed = EmbedBuilder::new()
+            .title("Help")
+            .description(format!("All commands use the `sauce!` prefix. Some commands might take a few seconds due to calling a potentially slow web service.\nSettings:\n- Links Displayed: {}", cfg.top_links()))
+            .field(EmbedField {
+                name: "sauce!saucenao <link>".to_owned(),
+                value: "Takes a link and uses the saucenao backend to get results. Fast, but has rate limits. Checks more locations.\nAlso works with `sauce!nao`\n\nRate limits:\n- 6 searches in 30 seconds\n- 200 searches in 24 hours\nThese apply globally across the bot.".to_owned(),
+                inline: false,
+            })
+            .field(EmbedField {
+                name: "sauce!iqdb <link>".to_owned(),
+                value: "Takes a link and uses the iqdb backend to get results. Slower, without any rate limits, checks more locations.".to_owned(),
+                inline: false,
+            })
+            .field(EmbedField {
+                name: "sauce!issue".to_owned(),
+                value: "Provides a link to the github to report issues with the bot.".to_owned(),
+                inline: false,
+            })
+            .field(EmbedField {
+                name: "sauce!support".to_owned(),
+                value: "Provides a link to ways to support the bot.\nThis will help keep the VPS up and running, as well as increase SauceNao rate limits.".to_owned(),
+                inline: false,
+            })
+            .field(EmbedField {
+                name: "sauce!help".to_owned(),
+                value: "Provides help about the bot.".to_owned(),
+                inline: false,
+            })
+            .color(0x8B_D8C6)
+            .build()?;
+
+        let resp = CallbackDataBuilder::new()
+            .embeds(vec![embed])
+            .flags(MessageFlags::EPHEMERAL);
+        let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+
+        interaction_client
+            .interaction_callback(command.interaction_id, &command.token, &resp)
+            .exec()
+            .await?;
+
+        Ok(())
+    }
 }
 
-#[command]
-async fn help(ctx: &Context, msg: &Message) -> CommandResult {
-    let channel = msg.channel_id;
-    let cfg = Config::load();
-    let cfg = cfg.settings();
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "issue",
+    desc = "Provides information about how to report an issue"
+)]
+pub struct IssueCommand;
 
-    match channel.send_message(&ctx, |m|
-        m.reference_message(msg)
-            .allowed_mentions(serenity::builder::CreateAllowedMentions::empty_parse).embed(|e|
-                e.title("Help")
-                    .description(format!("All commands use the `sauce!` prefix. Some commands might take a few seconds due to calling a potentially slow web service.\nSettings:\n- Links Displayed: {}\n- Using Embeds: {}", cfg.top_links(), cfg.use_embeds()))
-                    .field("sauce!saucenao <link>", "Takes a link and uses the saucenao backend to get results. Fast, but has rate limits. Checks more locations.\nAlso works with `sauce!nao`\n\nRate limits:\n- 6 searches in 30 seconds\n- 200 searches in 24 hours\nThese apply globally across the bot.", false)
-                    .field("sauce!iqdb <link>", "Takes a link and uses the iqdb backend to get results. Slower, without any rate limits, checks more locations.", false)
-                    .field("sauce!issue", "Provides a link to the github to report issues with the bot.", false)
-                    .field("sauce!support", "Provides a link to ways to support the bot.\nThis will help keep the VPS up and running, as well as increase SauceNao rate limits.", false)
-                    .field("sauce!help", "Provides help about the bot.", false)
-                    .color((139, 216, 198))
+#[async_trait]
+impl Cmd for IssueCommand {
+    async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
+        let interaction_client = ctx.interaction_client();
+
+        let resp = CallbackDataBuilder::new()
+            .content(
+                "To report an issue, please go to <https://github.com/lyssieth/sauce-bot/issues>"
+                    .to_owned(),
             )
-        ).await {
-            Ok(_) => {}
-            Err(err) => {
-                error!("Failed to send help: {}", err);
-                if let Some(channel) = channel.to_channel(&ctx).await?.guild() {
-                    msg.author.direct_message(&ctx, |m| {
-                        m.embed(|e| {
-                            e.title("Error")
-                                .description("I failed to send the help message in the channel you requested. Information will be provided below.")
-                                .field("Channel", format!("{}", channel.mention()), false)
-                                .field("Guild", format!("{}", channel.guild_id), false)
-                                .field("Error", format!("{}", err), false)
-                        })
-                    }).await?;
-                }
-            }
-        }
+            .flags(MessageFlags::EPHEMERAL);
+        let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
 
-    Ok(())
+        interaction_client
+            .interaction_callback(command.interaction_id, &command.token, &resp)
+            .exec()
+            .await?;
+
+        Ok(())
+    }
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "support",
+    desc = "Provides information about how to support the continued work of SauceBot"
+)]
+pub struct SupportCommand;
+
+#[async_trait]
+impl Cmd for SupportCommand {
+    async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
+        let interaction_client = ctx.interaction_client();
+
+        let embed = EmbedBuilder::new()
+            .title("Support")
+                    .description("All the ways to support SauceBot.\n\nAny money gained through this will first go towards the VPS and SauceNao rate limits, after which it will go into my pocket.")
+                    .field(EmbedField {
+                        name: "Patreon".to_owned(),
+                        value: "Monthly only. [Link](https://patreon.com/lyssieth)".to_owned(),
+                        inline: false,
+                    })
+                    .field(EmbedField {
+                        name: "Github Sponsor".to_owned(),
+                        value: "Both one-time and monthly. [Link](https://github.com/sponsors/lyssieth)".to_owned(),
+                        inline: false
+                    })
+            .color(0x8B_D8C6)
+            .build()?;
+
+        let resp = CallbackDataBuilder::new()
+            .embeds(vec![embed])
+            .flags(MessageFlags::EPHEMERAL);
+        let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+
+        interaction_client
+            .interaction_callback(command.interaction_id, &command.token, &resp)
+            .exec()
+            .await?;
+
+        Ok(())
+    }
 }

@@ -1,9 +1,18 @@
-pub use admin::*;
-pub use basic::*;
-pub use iqdb::*;
-pub use saucenao::*;
+use twilight_interactions::command::ApplicationCommandData;
 
-mod admin;
-mod basic;
-mod iqdb;
-mod saucenao;
+pub mod basic;
+pub mod iqdb;
+pub mod saucenao;
+
+pub fn get() -> Vec<ApplicationCommandData> {
+    let mut res = Vec::new();
+    let mut basic = basic::get();
+    let mut iqdb = iqdb::get();
+    let mut saucenao = saucenao::get();
+
+    res.append(&mut basic);
+    res.append(&mut iqdb);
+    res.append(&mut saucenao);
+
+    res
+}

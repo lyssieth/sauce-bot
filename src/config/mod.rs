@@ -1,7 +1,8 @@
-use std::{collections::HashSet, fs::OpenOptions, io::Read, io::Write, path::PathBuf};
+use std::{
+    collections::HashSet, fs::OpenOptions, io::Read, io::Write, num::NonZeroU64, path::PathBuf,
+};
 
 use serde::{Deserialize, Serialize};
-use serenity::model::id::UserId;
 use smart_default::SmartDefault;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Hash, Default, Serialize, Deserialize)]
@@ -85,10 +86,6 @@ impl Credentials {
 
 #[derive(Debug, Clone, PartialOrd, PartialEq, Hash, SmartDefault, Serialize, Deserialize)]
 pub(crate) struct Settings {
-    #[default = "sauce!"]
-    prefix: String,
-    #[default = true]
-    use_embeds: bool,
     #[default = 5]
     top_links: u8,
     #[default(_code = "vec![]")]
@@ -96,19 +93,15 @@ pub(crate) struct Settings {
 }
 
 impl Settings {
-    pub(crate) fn prefix(&self) -> &String {
-        &self.prefix
-    }
-
-    pub(crate) fn use_embeds(&self) -> bool {
-        self.use_embeds
-    }
-
     pub(crate) fn top_links(&self) -> u8 {
         self.top_links
     }
 
-    pub(crate) fn owner_ids_set(&self) -> HashSet<UserId> {
-        self.owner_ids.iter().copied().map(UserId).collect()
+    pub(crate) fn owner_ids_set(&self) -> HashSet<NonZeroU64> {
+        self.owner_ids
+            .iter()
+            .copied()
+            .filter_map(NonZeroU64::new)
+            .collect()
     }
 }
