@@ -18,7 +18,14 @@ use twilight_model::{
     },
 };
 
-use crate::{commands::basic::HelpCommand, Context, Res};
+use crate::{
+    commands::{
+        basic::{HelpCommand, IssueCommand, SupportCommand},
+        iqdb::Iqdb,
+        saucenao::Saucenao,
+    },
+    Context, Res,
+};
 
 pub(crate) async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -> Res<()> {
     let activity = Activity::from(MinimalActivity {
@@ -94,6 +101,58 @@ pub(crate) async fn interaction_create(
             };
 
             help_command.execute(ctx, cmd).await?;
+        }
+
+        "issue" => {
+            let issue_command = IssueCommand::from_interaction(input_data)?;
+
+            let cmd = Command {
+                name,
+                interaction_id,
+                command_id,
+                token,
+            };
+
+            issue_command.execute(ctx, cmd).await?;
+        }
+
+        "support" => {
+            let support_command = SupportCommand::from_interaction(input_data)?;
+
+            let cmd = Command {
+                name,
+                interaction_id,
+                command_id,
+                token,
+            };
+
+            support_command.execute(ctx, cmd).await?;
+        }
+
+        "iqdb" => {
+            let iqdb_command = Iqdb::from_interaction(input_data)?;
+
+            let cmd = Command {
+                name,
+                interaction_id,
+                command_id,
+                token,
+            };
+
+            iqdb_command.execute(ctx, cmd).await?;
+        }
+
+        "saucenao" => {
+            let saucenao_command = Saucenao::from_interaction(input_data)?;
+
+            let cmd = Command {
+                name,
+                interaction_id,
+                command_id,
+                token,
+            };
+
+            saucenao_command.execute(ctx, cmd).await?;
         }
 
         _ => {

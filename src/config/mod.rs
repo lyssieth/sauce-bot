@@ -1,6 +1,4 @@
-use std::{
-    collections::HashSet, fs::OpenOptions, io::Read, io::Write, num::NonZeroU64, path::PathBuf,
-};
+use std::{fs::OpenOptions, io::Read, io::Write, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 use smart_default::SmartDefault;
@@ -88,20 +86,10 @@ impl Credentials {
 pub(crate) struct Settings {
     #[default = 5]
     top_links: u8,
-    #[default(_code = "vec![]")]
-    owner_ids: Vec<u64>,
 }
 
 impl Settings {
     pub(crate) fn top_links(&self) -> u8 {
         self.top_links
-    }
-
-    pub(crate) fn owner_ids_set(&self) -> HashSet<NonZeroU64> {
-        self.owner_ids
-            .iter()
-            .copied()
-            .filter_map(NonZeroU64::new)
-            .collect()
     }
 }

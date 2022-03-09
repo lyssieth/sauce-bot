@@ -13,7 +13,6 @@ mod config;
 mod context;
 mod events;
 mod hooks;
-mod util;
 
 async fn handle_event(shard_id: u64, event: Event, ctx: Arc<Context>) -> Res<()> {
     let res = match event {
