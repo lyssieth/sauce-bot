@@ -1,18 +1,40 @@
-use crate::config::Config;
+use std::sync::Arc;
+
+use crate::{
+    config::Config,
+    events::{Cmd, Command},
+    Context, Res,
+};
+use async_trait::async_trait;
 use sauce_api::prelude::*;
 use tracing::error;
-use twilight_interactions::command::ApplicationCommandData;
+use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
+use twilight_model::id::{marker::AttachmentMarker, Id};
 use url::Url;
 
 pub fn get() -> Vec<ApplicationCommandData> {
-    vec![]
+    vec![Iqdb::create_command()]
 }
 
-// #[group()]
-// #[prefix("iqdb")]
-// #[commands(run)]
-// #[default_command(run)]
-// struct Iqdb;
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "iqdb",
+    desc = "Takes a link and uses the iqdb backend to get results."
+)]
+pub struct Iqdb {
+    /// The link to search for.
+    link: Option<String>,
+
+    /// An attachment to search for
+    attachment: Option<Id<AttachmentMarker>>,
+}
+
+#[async_trait]
+impl Cmd for Iqdb {
+    async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
+        Ok(())
+    }
+}
 
 // #[command]
 // #[num_args(1)]
