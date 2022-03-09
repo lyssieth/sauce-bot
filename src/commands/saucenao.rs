@@ -3,10 +3,10 @@ use std::{lazy::SyncLazy, sync::Arc, time::Duration};
 use crate::{
     config::Config,
     events::{Cmd, Command},
+    rate_limiter::RateLimiter,
     Context, Res,
 };
 use async_trait::async_trait;
-use r8limit::RateLimiter;
 use sauce_api::prelude::*;
 use tokio::sync::RwLock;
 use tracing::error;
@@ -23,6 +23,7 @@ pub fn get() -> Vec<ApplicationCommandData> {
     vec![Saucenao::create_command()]
 }
 
+#[derive(Debug, Clone)]
 struct RateLimits {
     short_usage: RateLimiter,
     long_usage: RateLimiter,
@@ -33,12 +34,10 @@ impl RateLimits {
         let a = self.short_usage.attempt();
         let b = self.long_usage.attempt();
 
-        a || b
+        !(a || b)
     }
-}
 
-impl Default for RateLimits {
-    fn default() -> Self {
+    pub fn new() -> Self {
         Self {
             short_usage: RateLimiter::new(6, Duration::from_secs(30)),
             long_usage: RateLimiter::new(200, Duration::from_secs(24 * 60 * 60)),
@@ -46,8 +45,8 @@ impl Default for RateLimits {
     }
 }
 
-static mut RATE_LIMITS: SyncLazy<RwLock<RateLimits>> =
-    SyncLazy::new(|| RwLock::new(RateLimits::default()));
+static mut RATE_LIMITS: SyncLazy<Arc<RwLock<RateLimits>>> =
+    SyncLazy::new(|| Arc::new(RwLock::new(RateLimits::new())));
 
 #[derive(CreateCommand, CommandModel)]
 #[command(

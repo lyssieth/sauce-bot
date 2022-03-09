@@ -14,6 +14,7 @@ mod commands;
 mod config;
 mod context;
 mod events;
+mod rate_limiter;
 
 async fn handle_event(shard_id: u64, event: Event, ctx: Arc<Context>) -> Res<()> {
     let res = match event {
