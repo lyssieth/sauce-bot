@@ -29,12 +29,26 @@ struct RateLimits {
     long_usage: RateLimiter,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum Cause {
+    Short,
+    Long,
+}
+
 impl RateLimits {
     pub fn limited(&mut self) -> bool {
         let a = self.short_usage.attempt();
         let b = self.long_usage.attempt();
 
         !(a || b)
+    }
+
+    pub fn cause(&self) -> Cause {
+        if self.short_usage.remaining() == 0 {
+            Cause::Long
+        } else {
+            Cause::Short
+        }
     }
 
     pub fn new() -> Self {
@@ -184,11 +198,29 @@ impl Cmd for Saucenao {
     async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
         let mut rate_limits = unsafe { RATE_LIMITS.write().await };
 
+        let interaction_client = ctx.interaction_client();
+
         if rate_limits.limited() {
+            let cause = rate_limits.cause();
+
+            let resp = match cause {
+                Cause::Short => CallbackDataBuilder::new()
+                    .content("You are being rate limited. Please wait up to 30 seconds before trying again. (sorry, the rate limits on SauceNao are like this. Consider `/support`ing the bot's creator)".to_owned())
+                    .flags(MessageFlags::EPHEMERAL),
+                Cause::Long => CallbackDataBuilder::new()
+                    .content("You are being rate limited. Please wait up to 24 hours for it to fix. (sorry, the rate limits on SauceNao are like this. Consider `/support`ing the bot's creator)".to_owned())
+                    .flags(MessageFlags::EPHEMERAL),
+            };
+
+            let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+
+            interaction_client
+                .interaction_callback(command.interaction_id, &command.token, &resp)
+                .exec()
+                .await?;
+
             return Ok(());
         }
-
-        let interaction_client = ctx.interaction_client();
 
         if self.link.is_none() && self.attachment.is_none() {
             let resp = CallbackDataBuilder::new()

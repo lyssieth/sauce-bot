@@ -31,4 +31,8 @@ impl RateLimiter {
 
         true
     }
+
+    pub fn remaining(&self) -> u64 {
+        self.executions_left_in_window
+    }
 }
