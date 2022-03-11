@@ -4,10 +4,10 @@ use async_trait::async_trait;
 use twilight_embed_builder::EmbedBuilder;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::{
-    application::callback::InteractionResponse,
     channel::{embed::EmbedField, message::MessageFlags},
+    http::interaction::{InteractionResponse, InteractionResponseType},
 };
-use twilight_util::builder::CallbackDataBuilder;
+use twilight_util::builder::InteractionResponseDataBuilder;
 
 use crate::{
     config::Config,
@@ -67,13 +67,16 @@ impl Cmd for HelpCommand {
             .color(0x8B_D8C6)
             .build()?;
 
-        let resp = CallbackDataBuilder::new()
+        let resp = InteractionResponseDataBuilder::new()
             .embeds(vec![embed])
             .flags(MessageFlags::EPHEMERAL);
-        let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+        let resp = InteractionResponse {
+            kind: InteractionResponseType::ChannelMessageWithSource,
+            data: Some(resp.build()),
+        };
 
         interaction_client
-            .interaction_callback(command.interaction_id, &command.token, &resp)
+            .create_response(command.interaction_id, &command.token, &resp)
             .exec()
             .await?;
 
@@ -93,16 +96,19 @@ impl Cmd for IssueCommand {
     async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
         let interaction_client = ctx.interaction_client();
 
-        let resp = CallbackDataBuilder::new()
+        let resp = InteractionResponseDataBuilder::new()
             .content(
                 "To report an issue, please go to <https://github.com/lyssieth/sauce-bot/issues>"
                     .to_owned(),
             )
             .flags(MessageFlags::EPHEMERAL);
-        let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+        let resp = InteractionResponse {
+            kind: InteractionResponseType::ChannelMessageWithSource,
+            data: Some(resp.build()),
+        };
 
         interaction_client
-            .interaction_callback(command.interaction_id, &command.token, &resp)
+            .create_response(command.interaction_id, &command.token, &resp)
             .exec()
             .await?;
 
@@ -138,13 +144,16 @@ impl Cmd for SupportCommand {
             .color(0x8B_D8C6)
             .build()?;
 
-        let resp = CallbackDataBuilder::new()
+        let resp = InteractionResponseDataBuilder::new()
             .embeds(vec![embed])
             .flags(MessageFlags::EPHEMERAL);
-        let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+        let resp = InteractionResponse {
+            kind: InteractionResponseType::ChannelMessageWithSource,
+            data: Some(resp.build()),
+        };
 
         interaction_client
-            .interaction_callback(command.interaction_id, &command.token, &resp)
+            .create_response(command.interaction_id, &command.token, &resp)
             .exec()
             .await?;
 

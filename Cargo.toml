@@ -26,11 +26,11 @@ smart-default = "0.6.0"
 tokio = { version = "1.17.0", features = ["full"] }
 toml = "0.5.8"
 url = "2.2.2"
-twilight-gateway = "0.9.1"
-twilight-http = "0.9.1"
-twilight-model = "0.9.2"
-twilight-embed-builder = "0.9.0"
+twilight-gateway = "0.10.0"
+twilight-http = "0.10.0"
+twilight-model = "0.10.0"
+twilight-embed-builder = "0.10.0"
 futures = "0.3.21"
 twilight-interactions = "0.9.1"
-twilight-util = { version = "0.9.1", features = ["full"] }
+twilight-util = { version = "0.10.0", features = ["full"] }
 async-trait = "0.1.52"

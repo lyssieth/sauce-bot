@@ -1,5 +1,4 @@
 #![warn(clippy::pedantic)]
-#![allow(clippy::wildcard_imports)]
 #![feature(once_cell)]
 
 pub use context::Context;

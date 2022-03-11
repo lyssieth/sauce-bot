@@ -11,10 +11,10 @@ use tracing::error;
 use twilight_embed_builder::EmbedBuilder;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::{
-    application::callback::InteractionResponse,
     channel::{embed::EmbedField, message::MessageFlags, Attachment},
+    http::interaction::{InteractionResponse, InteractionResponseType},
 };
-use twilight_util::builder::CallbackDataBuilder;
+use twilight_util::builder::InteractionResponseDataBuilder;
 use url::Url;
 
 pub fn get() -> Vec<ApplicationCommandData> {
@@ -31,7 +31,7 @@ pub struct Iqdb {
     link: Option<String>,
 
     /// An attachment to search for
-    attachment: Option<Attachment>,
+    attachment: Option<Attachment>, // TODO: Wait for fix
 }
 
 impl Iqdb {
@@ -40,13 +40,16 @@ impl Iqdb {
         let link = self.link.clone().unwrap();
 
         if Url::parse(&link).is_err() {
-            let resp = CallbackDataBuilder::new()
+            let resp = InteractionResponseDataBuilder::new()
                 .content("Invalid link provided".to_owned())
                 .flags(MessageFlags::EPHEMERAL);
-            let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+            let resp = InteractionResponse {
+                kind: InteractionResponseType::ChannelMessageWithSource,
+                data: Some(resp.build()),
+            };
 
             interaction_client
-                .interaction_callback(command.interaction_id, &command.token, &resp)
+                .create_response(command.interaction_id, &command.token, &resp)
                 .exec()
                 .await?;
 
@@ -62,13 +65,16 @@ impl Iqdb {
 
         if let Some(content_type) = attachment.content_type {
             if !content_type.starts_with("image/") {
-                let resp = CallbackDataBuilder::new()
+                let resp = InteractionResponseDataBuilder::new()
                     .content("Invalid attachment provided".to_owned())
                     .flags(MessageFlags::EPHEMERAL);
-                let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+                let resp = InteractionResponse {
+                    kind: InteractionResponseType::ChannelMessageWithSource,
+                    data: Some(resp.build()),
+                };
 
                 interaction_client
-                    .interaction_callback(command.interaction_id, &command.token, &resp)
+                    .create_response(command.interaction_id, &command.token, &resp)
                     .exec()
                     .await?;
 
@@ -126,24 +132,30 @@ impl Iqdb {
 
             let embed = embed.build()?;
 
-            let resp = CallbackDataBuilder::new()
+            let resp = InteractionResponseDataBuilder::new()
                 .embeds(vec![embed])
                 .flags(MessageFlags::EPHEMERAL);
-            let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+            let resp = InteractionResponse {
+                kind: InteractionResponseType::ChannelMessageWithSource,
+                data: Some(resp.build()),
+            };
 
             interaction_client
-                .interaction_callback(command.interaction_id, &command.token, &resp)
+                .create_response(command.interaction_id, &command.token, &resp)
                 .exec()
                 .await?;
         } else if let Err(e) = res {
             error!(?e, "Failed to execute");
-            let resp = CallbackDataBuilder::new()
+            let resp = InteractionResponseDataBuilder::new()
                 .content(format!("Failed to execute command: {}", e))
                 .flags(MessageFlags::EPHEMERAL);
-            let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+            let resp = InteractionResponse {
+                kind: InteractionResponseType::ChannelMessageWithSource,
+                data: Some(resp.build()),
+            };
 
             interaction_client
-                .interaction_callback(command.interaction_id, &command.token, &resp)
+                .create_response(command.interaction_id, &command.token, &resp)
                 .exec()
                 .await?;
         }
@@ -157,13 +169,16 @@ impl Cmd for Iqdb {
         let interaction_client = ctx.interaction_client();
 
         if self.link.is_none() && self.attachment.is_none() {
-            let resp = CallbackDataBuilder::new()
+            let resp = InteractionResponseDataBuilder::new()
                 .content("No image was provided, whether by link or attachment.".to_owned())
                 .flags(MessageFlags::EPHEMERAL);
-            let resp = InteractionResponse::ChannelMessageWithSource(resp.build());
+            let resp = InteractionResponse {
+                kind: InteractionResponseType::ChannelMessageWithSource,
+                data: Some(resp.build()),
+            };
 
             interaction_client
-                .interaction_callback(command.interaction_id, &command.token, &resp)
+                .create_response(command.interaction_id, &command.token, &resp)
                 .exec()
                 .await?;
 
