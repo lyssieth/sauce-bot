@@ -32,6 +32,9 @@ pub struct Iqdb {
 
     /// An attachment to search for
     attachment: Option<Attachment>,
+
+    /// Whether the message should be public
+    ephemeral: Option<bool>,
 }
 
 impl Iqdb {
@@ -132,9 +135,12 @@ impl Iqdb {
 
             let embed = embed.build()?;
 
-            let resp = InteractionResponseDataBuilder::new()
-                .embeds(vec![embed])
-                .flags(MessageFlags::EPHEMERAL);
+            let mut resp = InteractionResponseDataBuilder::new().embeds(vec![embed]);
+            if let Some(ephemeral) = self.ephemeral {
+                if ephemeral {
+                    resp = resp.flags(MessageFlags::EPHEMERAL);
+                }
+            }
             let resp = InteractionResponse {
                 kind: InteractionResponseType::ChannelMessageWithSource,
                 data: Some(resp.build()),
@@ -146,9 +152,13 @@ impl Iqdb {
                 .await?;
         } else if let Err(e) = res {
             error!(?e, "Failed to execute");
-            let resp = InteractionResponseDataBuilder::new()
-                .content(format!("Failed to execute command: {}", e))
-                .flags(MessageFlags::EPHEMERAL);
+            let mut resp = InteractionResponseDataBuilder::new()
+                .content(format!("Failed to execute command: {}", e));
+            if let Some(ephemeral) = self.ephemeral {
+                if ephemeral {
+                    resp = resp.flags(MessageFlags::EPHEMERAL);
+                }
+            }
             let resp = InteractionResponse {
                 kind: InteractionResponseType::ChannelMessageWithSource,
                 data: Some(resp.build()),
