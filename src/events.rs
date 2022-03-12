@@ -27,7 +27,6 @@ use crate::{
     Context, Res,
 };
 
-#[allow(unreachable_code)] // TODO: Remove
 pub(crate) async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -> Res<()> {
     let activity = Activity::from(MinimalActivity {
         kind: ActivityType::Custom,
@@ -48,7 +47,7 @@ pub(crate) async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -
         let cg = interaction_client
             .create_global_command()
             .chat_input(&x.name, &x.description)?
-            .command_options(todo!("fix this") /* TODO: bring back &x.options */)?
+            .command_options(&x.options)?
             .default_permission(x.default_permission)
             .exec();
 
@@ -66,7 +65,6 @@ pub(crate) async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -
     Ok(())
 }
 
-#[allow(unreachable_code)] // TODO: Remove
 pub(crate) async fn interaction_create(
     shard_id: u64,
     ctx: Arc<Context>,
@@ -88,7 +86,7 @@ pub(crate) async fn interaction_create(
     let command_id = data.id;
     let name = data.name.clone();
 
-    let input_data: CommandInputData = todo!("this needs to work eventually"); // TODO: fix
+    let input_data: CommandInputData = data.into();
 
     let cmd = Command {
         name: name.clone(),
@@ -97,7 +95,7 @@ pub(crate) async fn interaction_create(
         token,
     };
 
-    before(&cmd);
+    before(shard_id, &cmd);
 
     let res = {
         let ctx = ctx.clone();
@@ -142,20 +140,20 @@ pub(crate) async fn interaction_create(
         }
     };
 
-    after(&cmd, res);
+    after(shard_id, &cmd, res);
 
     Ok(())
 }
 
-fn before(cmd: &Command) {
-    info!("Executing command {}", cmd.name);
+fn before(shard_id: u64, cmd: &Command) {
+    info!("Executing command {} on shard {}", cmd.name, shard_id);
 }
 
-fn after(cmd: &Command, res: Res<()>) {
+fn after(shard_id: u64, cmd: &Command, res: Res<()>) {
     if let Err(e) = res {
-        error!(?e, "Failed to execute {}", cmd.name);
+        error!(?e, "Failed to execute {} on shard {}", cmd.name, shard_id);
     } else {
-        info!("Successfully executed {}", cmd.name);
+        info!("Successfully executed {} on shard {}", cmd.name, shard_id);
     }
 }
 

@@ -31,7 +31,7 @@ pub struct Iqdb {
     link: Option<String>,
 
     /// An attachment to search for
-    attachment: Option<Attachment>, // TODO: Wait for fix
+    attachment: Option<Attachment>,
 }
 
 impl Iqdb {

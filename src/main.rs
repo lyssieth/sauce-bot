@@ -23,7 +23,6 @@ async fn handle_event(shard_id: u64, event: Event, ctx: Arc<Context>) -> Res<()>
         }
 
         _ => {
-            // debug!("Unhandled event {event:?}");
             Ok(())
         }
     };
