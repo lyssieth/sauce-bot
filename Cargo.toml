@@ -31,6 +31,6 @@ twilight-http = "0.10.0"
 twilight-model = "0.10.0"
 twilight-embed-builder = "0.10.0"
 futures = "0.3.21"
-twilight-interactions = { git = "https://github.com/lyssieth/twilight-interactions", branch = "upgrade-to-twilight-0.10" } # "0.9.1"
+twilight-interactions = "0.10.0"
 twilight-util = { version = "0.10.0", features = ["full"] }
 async-trait = "0.1.52"

@@ -1798,8 +1798,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-interactions"
-version = "0.9.1"
-source = "git+https://github.com/lyssieth/twilight-interactions?branch=upgrade-to-twilight-0.10#786068a6448a3892f43797dad0cd2c756006b0ce"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de85e788914f3617c67df63f82e82811956abcd859e0b6705501e6db6ee75440"
 dependencies = [
  "twilight-interactions-derive",
  "twilight-model",
@@ -1807,8 +1808,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-interactions-derive"
-version = "0.9.1"
-source = "git+https://github.com/lyssieth/twilight-interactions?branch=upgrade-to-twilight-0.10#786068a6448a3892f43797dad0cd2c756006b0ce"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fff47b4c72a916b46ce22cd3a4f2bdee23b17cfaa7b8b4155fd9bd84d4bdc4d"
 dependencies = [
  "proc-macro2",
  "quote",
