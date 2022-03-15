@@ -21,10 +21,9 @@ async fn handle_event(shard_id: u64, event: Event, ctx: Arc<Context>) -> Res<()>
         Event::InteractionCreate(interaction) => {
             events::interaction_create(shard_id, ctx, interaction).await
         }
+        Event::MessageCreate(message) => events::message_create(shard_id, ctx, message).await,
 
-        _ => {
-            Ok(())
-        }
+        _ => Ok(()),
     };
 
     if let Err(e) = res {

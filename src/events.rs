@@ -1,13 +1,14 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use async_trait::async_trait;
+use tokio::time::sleep;
 use tracing::{debug, error, info};
 use twilight_interactions::command::{CommandInputData, CommandModel};
 use twilight_model::{
     application::{command::CommandType, interaction::Interaction},
     gateway::{
         payload::{
-            incoming::{InteractionCreate, Ready},
+            incoming::{InteractionCreate, MessageCreate, Ready},
             outgoing::UpdatePresence,
         },
         presence::{Activity, ActivityType, MinimalActivity, Status},
@@ -61,6 +62,34 @@ pub(crate) async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -
             }
         }
     }
+
+    Ok(())
+}
+
+pub(crate) async fn message_create(
+    _shard_id: u64,
+    ctx: Arc<Context>,
+    message: Box<MessageCreate>,
+) -> Res<()> {
+    if !message.content.starts_with("sauce!") {
+        return Ok(());
+    }
+
+    let msg = ctx
+        .http
+        .create_message(message.channel_id)
+        .content("SauceBot now uses slash commands.\n\nThis message will delete after 20 seconds.")?
+        .reply(message.id)
+        .exec()
+        .await?
+        .model()
+        .await?;
+    let msg = Arc::new(msg);
+
+    tokio::spawn(async move {
+        sleep(Duration::from_secs(20)).await;
+        drop(ctx.http.delete_message(msg.channel_id, msg.id).exec().await);
+    });
 
     Ok(())
 }
