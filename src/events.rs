@@ -29,7 +29,7 @@ use crate::{
 
 pub(crate) async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -> Res<()> {
     let activity = Activity::from(MinimalActivity {
-        kind: ActivityType::Custom,
+        kind: ActivityType::Playing,
         name: "sauce!help".to_string(),
         url: None,
     });
