@@ -33,7 +33,7 @@ pub struct Iqdb {
     /// An attachment to search for
     attachment: Option<Attachment>,
 
-    /// Whether the message should be public
+    /// Whether the message should be hidden
     ephemeral: Option<bool>,
 }
 
