@@ -1,13 +1,12 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use twilight_embed_builder::EmbedBuilder;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::{
     channel::{embed::EmbedField, message::MessageFlags},
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
-use twilight_util::builder::InteractionResponseDataBuilder;
+use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 
 use crate::{
     config::Config,
@@ -65,7 +64,7 @@ impl Cmd for HelpCommand {
                 inline: false,
             })
             .color(0x8B_D8C6)
-            .build()?;
+            .build();
 
         let resp = InteractionResponseDataBuilder::new()
             .embeds(vec![embed])
@@ -142,7 +141,7 @@ impl Cmd for SupportCommand {
                         inline: false
                     })
             .color(0x8B_D8C6)
-            .build()?;
+            .build();
 
         let resp = InteractionResponseDataBuilder::new()
             .embeds(vec![embed])

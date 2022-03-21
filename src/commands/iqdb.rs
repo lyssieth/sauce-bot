@@ -8,13 +8,12 @@ use crate::{
 use async_trait::async_trait;
 use sauce_api::prelude::*;
 use tracing::error;
-use twilight_embed_builder::EmbedBuilder;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::{
     channel::{embed::EmbedField, message::MessageFlags, Attachment},
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
-use twilight_util::builder::InteractionResponseDataBuilder;
+use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 use url::Url;
 
 pub fn get() -> Vec<ApplicationCommandData> {
@@ -133,7 +132,7 @@ impl Iqdb {
                 }
             }
 
-            let embed = embed.build()?;
+            let embed = embed.build();
 
             let mut resp = InteractionResponseDataBuilder::new().embeds(vec![embed]);
             if let Some(ephemeral) = self.ephemeral {
