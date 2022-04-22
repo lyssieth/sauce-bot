@@ -87,22 +87,16 @@ pub(crate) async fn respond(
                 inline: false,
             });
         } else {
-            let mut i = cfg.settings().top_links() as usize;
             let mut items = result.items;
 
-            items.sort_unstable_by_key(|c| i32::from_f32((c.similarity * 100f32).floor()));
+            items.sort_unstable_by_key(|c| i32::from_f32(c.similarity * 100f32.floor()));
 
-            for x in items {
-                i -= 1;
+            for x in items.iter().rev().take(cfg.settings().top_links() as usize) {
                 embed = embed.field(EmbedField {
                     name: format!("Similarity: {:0.2}", x.similarity),
                     value: format!("**<{}>**", x.link),
                     inline: false,
                 });
-
-                if i == 0 {
-                    break;
-                }
             }
         }
 
