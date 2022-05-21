@@ -13,6 +13,7 @@ use twilight_model::{
         },
         presence::{Activity, ActivityType, MinimalActivity, Status},
     },
+    guild::Permissions,
     id::{
         marker::{CommandMarker, InteractionMarker},
         Id,
@@ -49,7 +50,10 @@ pub(crate) async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -
             .create_global_command()
             .chat_input(&x.name, &x.description)?
             .command_options(&x.options)?
-            .default_permission(x.default_permission)
+            .default_member_permissions(
+                x.default_member_permissions.unwrap_or(Permissions::empty()),
+            )
+            .dm_permission(true)
             .exec();
 
         match cg.await {

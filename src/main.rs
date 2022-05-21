@@ -6,7 +6,7 @@ use futures::StreamExt;
 use std::{env, sync::Arc};
 use tracing::{error, info};
 use tracing_subscriber::{fmt, EnvFilter};
-use twilight_gateway::{cluster::ShardScheme, Cluster, Event, Intents};
+use twilight_gateway::{Cluster, Event, Intents};
 use twilight_http::Client as HttpClient;
 
 mod commands;
@@ -43,10 +43,7 @@ async fn main() -> Res<()> {
     let cfg = config::Config::load();
     let token = cfg.credentials().token();
 
-    let scheme = ShardScheme::Auto;
-
     let (cluster, mut events) = Cluster::builder(token.clone(), Intents::empty())
-        .shard_scheme(scheme)
         .build()
         .await?;
     let cluster = Arc::new(cluster);
