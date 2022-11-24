@@ -6,7 +6,7 @@ use crate::{
     sauce_finder, Context, Res,
 };
 use async_trait::async_trait;
-use sauce_api::prelude::*;
+use sauce_api::source::{self, Source};
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::channel::Attachment;
 
@@ -38,8 +38,8 @@ impl Iqdb {
         link: String,
     ) -> Res<()> {
         let cfg = Config::load();
-        let source = IQDB;
-        let res = source.check_sauce(&link).await;
+        let source = source::iqdb::Iqdb::create(()).await.expect("never fails");
+        let res = source.check(&link).await;
 
         sauce_finder::respond(&ctx, &command, res, cfg, self.ephemeral).await?;
 

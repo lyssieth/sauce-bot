@@ -5,7 +5,10 @@ use tokio::time::sleep;
 use tracing::{debug, error, info};
 use twilight_interactions::command::{CommandInputData, CommandModel};
 use twilight_model::{
-    application::{command::CommandType, interaction::Interaction},
+    application::{
+        command::CommandType,
+        interaction::{InteractionData, InteractionType},
+    },
     gateway::{
         payload::{
             incoming::{InteractionCreate, MessageCreate, Ready},
@@ -29,7 +32,7 @@ use crate::{
     Context, Res,
 };
 
-pub(crate) async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -> Res<()> {
+pub async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -> Res<()> {
     let activity = Activity::from(MinimalActivity {
         kind: ActivityType::Playing,
         name: "/help - slash commands!".to_string(),
@@ -53,8 +56,7 @@ pub(crate) async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -
             .default_member_permissions(
                 x.default_member_permissions.unwrap_or(Permissions::empty()),
             )
-            .dm_permission(true)
-            .exec();
+            .dm_permission(true);
 
         match cg.await {
             Ok(cmd) => {
@@ -70,7 +72,7 @@ pub(crate) async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -
     Ok(())
 }
 
-pub(crate) async fn message_create(
+pub async fn message_create(
     _shard_id: u64,
     ctx: Arc<Context>,
     message: Box<MessageCreate>,
@@ -84,7 +86,6 @@ pub(crate) async fn message_create(
         .create_message(message.channel_id)
         .content("SauceBot now uses slash commands.\n\nThis message will delete after 20 seconds.")?
         .reply(message.id)
-        .exec()
         .await?
         .model()
         .await?;
@@ -92,34 +93,47 @@ pub(crate) async fn message_create(
 
     tokio::spawn(async move {
         sleep(Duration::from_secs(20)).await;
-        drop(ctx.http.delete_message(msg.channel_id, msg.id).exec().await);
+        drop(ctx.http.delete_message(msg.channel_id, msg.id).await);
     });
 
     Ok(())
 }
 
-pub(crate) async fn interaction_create(
+pub async fn interaction_create(
     shard_id: u64,
     ctx: Arc<Context>,
-    interaction: InteractionCreate,
+    interaction: Box<InteractionCreate>,
 ) -> Res<()> {
-    let interaction_id = interaction.id();
-    let application_command = match interaction.0 {
-        Interaction::ApplicationCommand(cmd) => cmd,
+    let interaction_id = interaction.id;
+    let interaction = interaction.0;
+
+    match interaction.kind {
+        InteractionType::ApplicationCommand => {}
         _ => return Ok(()),
     };
-    let data = application_command.data;
+
+    let data = interaction.data;
+
+    let data = match data {
+        Some(data) => data,
+        None => return Ok(()),
+    };
+
+    let data = match data {
+        InteractionData::ApplicationCommand(data) => data,
+        _ => return Ok(()),
+    };
 
     if matches!(data.kind, CommandType::Message | CommandType::User) {
         debug!("Unhandled kind: {:?}", data.kind);
         return Ok(());
     }
 
-    let token = application_command.token;
+    let token = interaction.token;
     let command_id = data.id;
     let name = data.name.clone();
 
-    let input_data: CommandInputData = data.into();
+    let input_data: CommandInputData = (*data).into();
 
     let cmd = Command {
         name: name.clone(),

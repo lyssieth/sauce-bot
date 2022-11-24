@@ -1,4 +1,4 @@
-#![warn(clippy::pedantic)]
+#![warn(clippy::pedantic, clippy::nursery)]
 #![feature(once_cell)]
 
 pub use context::Context;
@@ -58,7 +58,7 @@ async fn main() -> Res<()> {
     let http = Arc::new(HttpClient::new(token.clone()));
 
     let application_id = {
-        let req = http.current_user_application().exec().await?;
+        let req = http.current_user_application().await?;
 
         req.model().await?.id
     };

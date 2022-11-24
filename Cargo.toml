@@ -12,25 +12,25 @@ lto = false
 lto = true
 
 [dependencies]
-color-eyre = "0.6.1"
-tracing = "0.1.34"
-tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
-sauce-api = { version = "0.9.3", default-features = false, features = [
+color-eyre = "0.6.2"
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+sauce-api = { version = "1.0.0", default-features = false, features = [
     "iqdb",
     "saucenao",
     "rustls",
 ] }
-serde = { version = "1.0.137", features = ["derive"] }
+serde = { version = "1.0.147", features = ["derive"] }
 # serenity = "0.10.10"
 smart-default = "0.6.0"
-tokio = { version = "1.18.2", features = ["full"] }
+tokio = { version = "1.22.0", features = ["full"] }
 toml = "0.5.9"
-url = "2.2.2"
-twilight-gateway = "0.11.0"
-twilight-http = "0.11.0"
-twilight-model = "0.11.0"
-futures = "0.3.21"
-twilight-interactions = "0.11.0"
-twilight-util = { version = "0.11.0", features = ["full"] }
-async-trait = "0.1.53"
+url = "2.3.1"
+twilight-gateway = "0.14.0"
+twilight-http = "0.14.0"
+twilight-model = "0.14.0"
+futures = "0.3.25"
+twilight-interactions = "0.14.1"
+twilight-util = { version = "0.14.0", features = ["full"] }
+async-trait = "0.1.58"
 num-traits = "0.2.15"

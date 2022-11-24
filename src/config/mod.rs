@@ -3,8 +3,8 @@ use std::{fs::OpenOptions, io::Read, io::Write, path::PathBuf};
 use serde::{Deserialize, Serialize};
 use smart_default::SmartDefault;
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Hash, Default, Serialize, Deserialize)]
-pub(crate) struct Config {
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+pub struct Config {
     credentials: Credentials,
     settings: Settings,
 }
@@ -18,15 +18,15 @@ impl Config {
         }
     }
 
-    pub(crate) fn credentials(&self) -> &Credentials {
+    pub const fn credentials(&self) -> &Credentials {
         &self.credentials
     }
 
-    pub(crate) fn settings(&self) -> &Settings {
+    pub const fn settings(&self) -> &Settings {
         &self.settings
     }
 
-    pub(crate) fn load() -> Self {
+    pub fn load() -> Self {
         let path = Self::get_path();
         let conf = if path.exists() {
             let mut file = OpenOptions::new()
@@ -49,7 +49,7 @@ impl Config {
         conf
     }
 
-    pub(crate) fn save(&self) {
+    pub fn save(&self) {
         let path = Self::get_path();
         let content = toml::to_string_pretty(self).expect("Unable to parse Config object");
 
@@ -64,8 +64,8 @@ impl Config {
     }
 }
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Hash, SmartDefault, Serialize, Deserialize)]
-pub(crate) struct Credentials {
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Hash, SmartDefault, Serialize, Deserialize)]
+pub struct Credentials {
     #[default = "INVALID"]
     token: String,
     #[default = "INVALID"]
@@ -73,23 +73,23 @@ pub(crate) struct Credentials {
 }
 
 impl Credentials {
-    pub(crate) fn token(&self) -> &String {
+    pub const fn token(&self) -> &String {
         &self.token
     }
 
-    pub(crate) fn saucenao_api_key(&self) -> &String {
+    pub const fn saucenao_api_key(&self) -> &String {
         &self.saucenao_api_key
     }
 }
 
-#[derive(Debug, Clone, PartialOrd, PartialEq, Hash, SmartDefault, Serialize, Deserialize)]
-pub(crate) struct Settings {
+#[derive(Debug, Clone, PartialOrd, PartialEq, Eq, Hash, SmartDefault, Serialize, Deserialize)]
+pub struct Settings {
     #[default = 5]
     top_links: u8,
 }
 
 impl Settings {
-    pub(crate) fn top_links(&self) -> u8 {
+    pub const fn top_links(&self) -> u8 {
         self.top_links
     }
 }

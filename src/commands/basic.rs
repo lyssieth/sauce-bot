@@ -3,7 +3,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::{
-    channel::{embed::EmbedField, message::MessageFlags},
+    channel::message::{embed::EmbedField, MessageFlags},
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
 use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
@@ -76,7 +76,6 @@ impl Cmd for HelpCommand {
 
         interaction_client
             .create_response(command.interaction_id, &command.token, &resp)
-            .exec()
             .await?;
 
         Ok(())
@@ -108,7 +107,6 @@ impl Cmd for IssueCommand {
 
         interaction_client
             .create_response(command.interaction_id, &command.token, &resp)
-            .exec()
             .await?;
 
         Ok(())
@@ -153,7 +151,6 @@ impl Cmd for SupportCommand {
 
         interaction_client
             .create_response(command.interaction_id, &command.token, &resp)
-            .exec()
             .await?;
 
         Ok(())

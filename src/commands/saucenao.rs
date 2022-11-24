@@ -1,4 +1,7 @@
-use std::{lazy::SyncLazy, sync::Arc, time::Duration};
+use std::{
+    sync::{Arc, LazyLock},
+    time::Duration,
+};
 
 use crate::{
     config::Config,
@@ -7,7 +10,7 @@ use crate::{
     sauce_finder, Context, Res,
 };
 use async_trait::async_trait;
-use sauce_api::prelude::*;
+use sauce_api::source::{saucenao::SauceNao, Source};
 use tokio::sync::RwLock;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::{
@@ -40,7 +43,7 @@ impl RateLimits {
         !(a || b)
     }
 
-    pub fn cause(&self) -> Cause {
+    pub const fn cause(&self) -> Cause {
         if self.short_usage.remaining() == 0 {
             Cause::Long
         } else {
@@ -56,8 +59,8 @@ impl RateLimits {
     }
 }
 
-static mut RATE_LIMITS: SyncLazy<Arc<RwLock<RateLimits>>> =
-    SyncLazy::new(|| Arc::new(RwLock::new(RateLimits::new())));
+static mut RATE_LIMITS: LazyLock<Arc<RwLock<RateLimits>>> =
+    LazyLock::new(|| Arc::new(RwLock::new(RateLimits::new())));
 
 #[derive(CreateCommand, CommandModel)]
 #[command(
@@ -83,9 +86,10 @@ impl Saucenao {
         link: String,
     ) -> Res<()> {
         let cfg = Config::load();
-        let mut source = SauceNao::new();
-        source.set_api_key(cfg.credentials().saucenao_api_key().clone());
-        let res = source.check_sauce(&link).await;
+        let source = SauceNao::create(cfg.credentials().saucenao_api_key().clone())
+            .await
+            .expect("never fails");
+        let res = source.check(&link).await;
 
         sauce_finder::respond(&ctx, &command, res, cfg, self.ephemeral).await?;
 
@@ -119,7 +123,6 @@ impl Cmd for Saucenao {
 
             interaction_client
                 .create_response(command.interaction_id, &command.token, &resp)
-                .exec()
                 .await?;
 
             return Ok(());

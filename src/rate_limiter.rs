@@ -9,8 +9,8 @@ pub struct RateLimiter {
 }
 
 impl RateLimiter {
-    pub fn new(max_executions_per_internal: u64, interval: Duration) -> RateLimiter {
-        RateLimiter {
+    pub fn new(max_executions_per_internal: u64, interval: Duration) -> Self {
+        Self {
             max_executions_per_window: max_executions_per_internal,
             executions_left_in_window: max_executions_per_internal,
             window_start_time: Instant::now(),
@@ -32,7 +32,7 @@ impl RateLimiter {
         true
     }
 
-    pub fn remaining(&self) -> u64 {
+    pub const fn remaining(&self) -> u64 {
         self.executions_left_in_window
     }
 }

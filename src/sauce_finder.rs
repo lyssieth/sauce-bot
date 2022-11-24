@@ -1,10 +1,13 @@
 use crate::{config::Config, events::Command, Context, Res};
 use color_eyre::eyre::eyre;
 use num_traits::FromPrimitive;
-use sauce_api::{Error, SauceResult};
+use sauce_api::{error::Error, source::Output};
 use tracing::error;
 use twilight_model::{
-    channel::{embed::EmbedField, message::MessageFlags, Attachment},
+    channel::{
+        message::{embed::EmbedField, MessageFlags},
+        Attachment,
+    },
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
 use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
@@ -24,7 +27,6 @@ pub async fn get_link_from_link(ctx: &Context, command: &Command, link: String) 
 
         interaction_client
             .create_response(command.interaction_id, &command.token, &resp)
-            .exec()
             .await?;
 
         return Err(eyre!("invalid link provided"));
@@ -52,7 +54,6 @@ pub async fn get_link_from_attachment(
 
             interaction_client
                 .create_response(command.interaction_id, &command.token, &resp)
-                .exec()
                 .await?;
 
             return Err(eyre!("invalid attachment provided"));
@@ -62,10 +63,10 @@ pub async fn get_link_from_attachment(
     Ok(attachment.url)
 }
 
-pub(crate) async fn respond(
+pub async fn respond(
     ctx: &Context,
     command: &Command,
-    res: Result<SauceResult, Error>,
+    res: Result<Output, Error>,
     cfg: Config,
     ephemeral: Option<bool>,
 ) -> Res<()> {
@@ -89,7 +90,7 @@ pub(crate) async fn respond(
         } else {
             let mut items = result.items;
 
-            items.sort_unstable_by_key(|c| i32::from_f32(c.similarity * 100f32.floor()));
+            items.sort_unstable_by_key(|c| i32::from_f32(c.similarity * 100f32));
 
             for x in items.iter().rev().take(cfg.settings().top_links() as usize) {
                 embed = embed.field(EmbedField {
@@ -115,12 +116,11 @@ pub(crate) async fn respond(
 
         interaction_client
             .create_response(command.interaction_id, &command.token, &resp)
-            .exec()
             .await?;
     } else if let Err(e) = res {
         error!(?e, "Failed to execute");
         let mut resp = InteractionResponseDataBuilder::new()
-            .content(format!("Failed to execute command: {}", e));
+            .content(format!("Failed to execute command: {e}"));
         if let Some(ephemeral) = ephemeral {
             if ephemeral {
                 resp = resp.flags(MessageFlags::EPHEMERAL);
@@ -133,14 +133,13 @@ pub(crate) async fn respond(
 
         interaction_client
             .create_response(command.interaction_id, &command.token, &resp)
-            .exec()
             .await?;
     }
 
     Ok(())
 }
 
-pub(crate) async fn respond_failure(ctx: &Context, command: &Command) -> Res<()> {
+pub async fn respond_failure(ctx: &Context, command: &Command) -> Res<()> {
     let interaction_client = ctx.interaction_client();
     let resp = InteractionResponseDataBuilder::new()
         .content("No image was provided, whether by link or attachment.".to_owned())
@@ -152,13 +151,12 @@ pub(crate) async fn respond_failure(ctx: &Context, command: &Command) -> Res<()>
 
     interaction_client
         .create_response(command.interaction_id, &command.token, &resp)
-        .exec()
         .await?;
 
     Ok(())
 }
 
-pub(crate) async fn get_link(
+pub async fn get_link(
     ctx: &Context,
     command: &Command,
     link: &Option<String>,
