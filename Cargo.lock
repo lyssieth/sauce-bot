@@ -499,7 +499,7 @@ dependencies = [
 [[package]]
 name = "fuzzysearch"
 version = "0.2.0"
-source = "git+https://github.com/Syfaro/fuzzysearch-rs.git?branch=main#14da8b8d6a9c8c52f5107c5120da643d11889d4e"
+source = "git+https://github.com/Syfaro/fuzzysearch-rs.git?branch=main#a98dc6207062ce4a0b9a51e31c5aa461b267a357"
 dependencies = [
  "chrono",
  "hex",
@@ -1314,7 +1314,7 @@ checksum = "f91339c0467de62360649f8d3e185ca8de4224ff281f66000de5eb2a77a79041"
 [[package]]
 name = "sauce-api"
 version = "1.1.0"
-source = "git+https://github.com/lyssieth/sauce-api#9b524eebf62953b2c800aaaeb52e1a5009219664"
+source = "git+https://github.com/lyssieth/sauce-api#4db3f4ff8f1cf5bb886ab65d0cce74feeff64d3f"
 dependencies = [
  "async-trait",
  "fuzzysearch",
@@ -1323,6 +1323,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "time 0.3.21",
+ "tracing",
  "visdom",
 ]
 
