@@ -1,8 +1,9 @@
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use async_trait::async_trait;
-use tokio::time::sleep;
+use sparkle_convenience::Bot;
 use tracing::{debug, error, info};
+use twilight_gateway::stream::ShardRef;
 use twilight_interactions::command::{CommandInputData, CommandModel};
 use twilight_model::{
     application::{
@@ -11,7 +12,7 @@ use twilight_model::{
     },
     gateway::{
         payload::{
-            incoming::{InteractionCreate, MessageCreate, Ready},
+            incoming::{InteractionCreate, Ready},
             outgoing::UpdatePresence,
         },
         presence::{Activity, ActivityType, MinimalActivity, Status},
@@ -26,13 +27,14 @@ use twilight_model::{
 use crate::{
     commands::{
         basic::{HelpCommand, IssueCommand, SupportCommand},
+        fuzzysearch::FuzzySearch,
         iqdb::Iqdb,
         saucenao::Saucenao,
     },
-    Context, Res,
+    Res,
 };
 
-pub async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -> Res<()> {
+pub async fn ready(mut shard: ShardRef<'_>, bot: Arc<Bot>, ready: Box<Ready>) -> Res<()> {
     let activity = Activity::from(MinimalActivity {
         kind: ActivityType::Playing,
         name: "/help - slash commands!".to_string(),
@@ -41,12 +43,16 @@ pub async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -> Res<(
 
     let command = UpdatePresence::new(vec![activity], false, None, Status::Online)?;
 
-    ctx.cluster.command(shard_id, &command).await?;
+    shard.command(&command).await?;
 
-    info!("Shard {} ready, logged in as {}", shard_id, ready.user.name);
+    info!(
+        "Shard {} ready, logged in as {}",
+        shard.id(),
+        ready.user.name
+    );
 
     let commands = crate::commands::get();
-    let interaction_client = ctx.interaction_client();
+    let interaction_client = bot.interaction_client();
 
     for x in commands {
         let cg = interaction_client
@@ -72,38 +78,7 @@ pub async fn ready(shard_id: u64, ctx: Arc<Context>, ready: Box<Ready>) -> Res<(
     Ok(())
 }
 
-pub async fn message_create(
-    _shard_id: u64,
-    ctx: Arc<Context>,
-    message: Box<MessageCreate>,
-) -> Res<()> {
-    if !message.content.starts_with("sauce!") {
-        return Ok(());
-    }
-
-    let msg = ctx
-        .http
-        .create_message(message.channel_id)
-        .content("SauceBot now uses slash commands.\n\nThis message will delete after 20 seconds.")?
-        .reply(message.id)
-        .await?
-        .model()
-        .await?;
-    let msg = Arc::new(msg);
-
-    tokio::spawn(async move {
-        sleep(Duration::from_secs(20)).await;
-        drop(ctx.http.delete_message(msg.channel_id, msg.id).await);
-    });
-
-    Ok(())
-}
-
-pub async fn interaction_create(
-    shard_id: u64,
-    ctx: Arc<Context>,
-    interaction: Box<InteractionCreate>,
-) -> Res<()> {
+pub async fn interaction_create(bot: Arc<Bot>, interaction: Box<InteractionCreate>) -> Res<()> {
     let interaction_id = interaction.id;
     let interaction = interaction.0;
 
@@ -114,14 +89,12 @@ pub async fn interaction_create(
 
     let data = interaction.data;
 
-    let data = match data {
-        Some(data) => data,
-        None => return Ok(()),
+    let Some(data) = data else {
+        return Ok(());
     };
 
-    let data = match data {
-        InteractionData::ApplicationCommand(data) => data,
-        _ => return Ok(()),
+    let InteractionData::ApplicationCommand(data) = data else {
+        return Ok(());
     };
 
     if matches!(data.kind, CommandType::Message | CommandType::User) {
@@ -142,10 +115,10 @@ pub async fn interaction_create(
         token,
     };
 
-    before(shard_id, &cmd);
+    before(&cmd);
 
     let res = {
-        let ctx = ctx.clone();
+        let ctx = bot.clone();
         let cmd = cmd.clone();
 
         match name.as_str() {
@@ -179,6 +152,12 @@ pub async fn interaction_create(
                 saucenao_command.execute(ctx, cmd).await
             }
 
+            "fuzzysearch" => {
+                let fuzzysearch_command = FuzzySearch::from_interaction(input_data)?;
+
+                fuzzysearch_command.execute(ctx, cmd).await
+            }
+
             _ => {
                 debug!("Unhandled interaction: {}", name);
 
@@ -187,20 +166,20 @@ pub async fn interaction_create(
         }
     };
 
-    after(shard_id, &cmd, res);
+    after(&cmd, res);
 
     Ok(())
 }
 
-fn before(shard_id: u64, cmd: &Command) {
-    info!("Executing command {} on shard {}", cmd.name, shard_id);
+fn before(cmd: &Command) {
+    info!("Executing command {}", cmd.name);
 }
 
-fn after(shard_id: u64, cmd: &Command, res: Res<()>) {
+fn after(cmd: &Command, res: Res<()>) {
     if let Err(e) = res {
-        error!(?e, "Failed to execute {} on shard {}", cmd.name, shard_id);
+        error!(?e, "Failed to execute {}", cmd.name);
     } else {
-        info!("Successfully executed {} on shard {}", cmd.name, shard_id);
+        info!("Successfully executed {}", cmd.name);
     }
 }
 
@@ -214,5 +193,5 @@ pub struct Command {
 
 #[async_trait]
 pub trait Cmd {
-    async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()>;
+    async fn execute(&self, ctx: Arc<Bot>, command: Command) -> Res<()>;
 }

@@ -14,23 +14,25 @@ lto = true
 [dependencies]
 color-eyre = "0.6.2"
 tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
-sauce-api = { version = "1.0.0", default-features = false, features = [
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
+sauce-api = { git = "https://github.com/lyssieth/sauce-api", default-features = false, features = [
     "iqdb",
     "saucenao",
+    "fuzzysearch",
     "rustls",
 ] }
-serde = { version = "1.0.147", features = ["derive"] }
+serde = { version = "1.0.162", features = ["derive"] }
 # serenity = "0.10.10"
-smart-default = "0.6.0"
-tokio = { version = "1.22.0", features = ["full"] }
-toml = "0.5.9"
+smart-default = "0.7.1"
+tokio = { version = "1.28.0", features = ["full"] }
+toml = "0.7.3"
 url = "2.3.1"
-twilight-gateway = "0.14.0"
-twilight-http = "0.14.0"
-twilight-model = "0.14.0"
-futures = "0.3.25"
-twilight-interactions = "0.14.1"
-twilight-util = { version = "0.14.0", features = ["full"] }
-async-trait = "0.1.58"
+twilight-gateway = "0.15.2"
+twilight-http = "0.15.2"
+twilight-model = "0.15.2"
+futures = "0.3.28"
+twilight-interactions = "0.15.1"
+twilight-util = { version = "0.15.2", features = ["full"] }
+async-trait = "0.1.68"
 num-traits = "0.2.15"
+sparkle-convenience = "0.15.8"

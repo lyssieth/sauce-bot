@@ -70,6 +70,8 @@ pub struct Credentials {
     token: String,
     #[default = "INVALID"]
     saucenao_api_key: String,
+    #[default = "INVALID"]
+    fuzzysearch_api_key: String,
 }
 
 impl Credentials {
@@ -79,6 +81,10 @@ impl Credentials {
 
     pub const fn saucenao_api_key(&self) -> &String {
         &self.saucenao_api_key
+    }
+
+    pub const fn fuzzysearch_api_key(&self) -> &String {
+        &self.fuzzysearch_api_key
     }
 }
 

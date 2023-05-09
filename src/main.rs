@@ -1,28 +1,22 @@
 #![warn(clippy::pedantic, clippy::nursery)]
-#![feature(once_cell)]
+#![feature(lazy_cell)]
 
-pub use context::Context;
 use futures::StreamExt;
-use std::{env, sync::Arc};
-use tracing::{error, info};
+use sparkle_convenience::Bot;
+use std::{env, process::exit, sync::Arc};
+use tracing::{error, info, warn};
 use tracing_subscriber::{fmt, EnvFilter};
-use twilight_gateway::{Cluster, Event, Intents};
-use twilight_http::Client as HttpClient;
+use twilight_gateway::{stream::ShardEventStream, Event, EventTypeFlags, Intents};
 
 mod commands;
 mod config;
-mod context;
 mod events;
 mod rate_limiter;
 mod sauce_finder;
 
-async fn handle_event(shard_id: u64, event: Event, ctx: Arc<Context>) -> Res<()> {
+async fn handle_event(event: Event, bot: Arc<Bot>) -> Res<()> {
     let res = match event {
-        Event::Ready(ready) => events::ready(shard_id, ctx, ready).await,
-        Event::InteractionCreate(interaction) => {
-            events::interaction_create(shard_id, ctx, interaction).await
-        }
-        Event::MessageCreate(message) => events::message_create(shard_id, ctx, message).await,
+        Event::InteractionCreate(interaction) => events::interaction_create(bot, interaction).await,
 
         _ => Ok(()),
     };
@@ -43,34 +37,40 @@ async fn main() -> Res<()> {
     let cfg = config::Config::load();
     let token = cfg.credentials().token();
 
-    let (cluster, mut events) = Cluster::builder(token.clone(), Intents::empty())
-        .build()
-        .await?;
-    let cluster = Arc::new(cluster);
+    let (bot, mut shards) = Bot::new(
+        token.clone(),
+        Intents::empty(),
+        EventTypeFlags::INTERACTION_CREATE | EventTypeFlags::READY,
+    )
+    .await?;
+    let bot = Arc::new(bot);
 
-    let cluster_spawn = Arc::clone(&cluster);
+    info!("Starting...");
 
-    info!("Starting cluster...");
-    tokio::spawn(async move {
-        cluster_spawn.up().await;
-    });
+    let mut stream = ShardEventStream::new(shards.iter_mut());
 
-    let http = Arc::new(HttpClient::new(token.clone()));
+    while let Some((shard, event)) = stream.next().await {
+        let event = match event {
+            Ok(event) => event,
+            Err(source) => {
+                if source.is_fatal() {
+                    error!(?source, "Fatal error receiving event");
 
-    let application_id = {
-        let req = http.current_user_application().await?;
+                    exit(1);
+                }
 
-        req.model().await?.id
-    };
+                warn!(?source, "Error receiving event");
 
-    let ctx = Arc::new(Context {
-        cluster,
-        http,
-        application_id,
-    });
+                continue;
+            }
+        };
 
-    while let Some((shard_id, event)) = events.next().await {
-        tokio::spawn(handle_event(shard_id, event, ctx.clone()));
+        match event {
+            Event::Ready(event) => events::ready(shard, bot.clone(), event).await?,
+            _ => {
+                tokio::spawn(handle_event(event, bot.clone()));
+            }
+        }
     }
 
     Ok(())

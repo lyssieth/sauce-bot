@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use sparkle_convenience::Bot;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::{
     channel::message::{embed::EmbedField, MessageFlags},
@@ -11,7 +12,7 @@ use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder
 use crate::{
     config::Config,
     events::{Cmd, Command},
-    Context, Res,
+    Res,
 };
 
 pub fn get() -> Vec<ApplicationCommandData> {
@@ -29,7 +30,7 @@ pub struct HelpCommand;
 
 #[async_trait]
 impl Cmd for HelpCommand {
-    async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
+    async fn execute(&self, ctx: Arc<Bot>, command: Command) -> Res<()> {
         let interaction_client = ctx.interaction_client();
 
         let cfg = Config::load();
@@ -46,6 +47,11 @@ impl Cmd for HelpCommand {
             .field(EmbedField {
                 name: "sauce!iqdb <link>".to_owned(),
                 value: "Takes a link and uses the iqdb backend to get results. Slower, without any rate limits, checks more locations.".to_owned(),
+                inline: false,
+            })
+            .field(EmbedField {
+                name: "sauce!fuzzy <link>".to_owned(),
+                value: "Takes a link and uses the fuzzysearch backend to get results. Fast, has rate limits\nBetter for furry/brony art than anything else.".to_owned(),
                 inline: false,
             })
             .field(EmbedField {
@@ -91,8 +97,8 @@ pub struct IssueCommand;
 
 #[async_trait]
 impl Cmd for IssueCommand {
-    async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
-        let interaction_client = ctx.interaction_client();
+    async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
+        let interaction_client = bot.interaction_client();
 
         let resp = InteractionResponseDataBuilder::new()
             .content(
@@ -122,8 +128,8 @@ pub struct SupportCommand;
 
 #[async_trait]
 impl Cmd for SupportCommand {
-    async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
-        let interaction_client = ctx.interaction_client();
+    async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
+        let interaction_client = bot.interaction_client();
 
         let embed = EmbedBuilder::new()
             .title("Support")

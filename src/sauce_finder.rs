@@ -1,7 +1,8 @@
-use crate::{config::Config, events::Command, Context, Res};
+use crate::{config::Config, events::Command, Res};
 use color_eyre::eyre::eyre;
 use num_traits::FromPrimitive;
 use sauce_api::{error::Error, source::Output};
+use sparkle_convenience::Bot;
 use tracing::error;
 use twilight_model::{
     channel::{
@@ -13,8 +14,8 @@ use twilight_model::{
 use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 use url::Url;
 
-pub async fn get_link_from_link(ctx: &Context, command: &Command, link: String) -> Res<String> {
-    let interaction_client = ctx.interaction_client();
+pub async fn get_link_from_link(bot: &Bot, command: &Command, link: String) -> Res<String> {
+    let interaction_client = bot.interaction_client();
 
     if Url::parse(&link).is_err() {
         let resp = InteractionResponseDataBuilder::new()
@@ -36,11 +37,11 @@ pub async fn get_link_from_link(ctx: &Context, command: &Command, link: String) 
 }
 
 pub async fn get_link_from_attachment(
-    ctx: &Context,
+    bot: &Bot,
     command: &Command,
     attachment: Attachment,
 ) -> Res<String> {
-    let interaction_client = ctx.interaction_client();
+    let interaction_client = bot.interaction_client();
 
     if let Some(content_type) = attachment.content_type {
         if !content_type.starts_with("image/") {
@@ -64,13 +65,13 @@ pub async fn get_link_from_attachment(
 }
 
 pub async fn respond(
-    ctx: &Context,
+    bot: &Bot,
     command: &Command,
     res: Result<Output, Error>,
     cfg: Config,
     ephemeral: Option<bool>,
 ) -> Res<()> {
-    let interaction_client = ctx.interaction_client();
+    let interaction_client = bot.interaction_client();
     if let Ok(result) = res {
         let mut embed = EmbedBuilder::new()
             .title("Results")
@@ -139,8 +140,8 @@ pub async fn respond(
     Ok(())
 }
 
-pub async fn respond_failure(ctx: &Context, command: &Command) -> Res<()> {
-    let interaction_client = ctx.interaction_client();
+pub async fn respond_failure(bot: &Bot, command: &Command) -> Res<()> {
+    let interaction_client = bot.interaction_client();
     let resp = InteractionResponseDataBuilder::new()
         .content("No image was provided, whether by link or attachment.".to_owned())
         .flags(MessageFlags::EPHEMERAL);
@@ -157,15 +158,15 @@ pub async fn respond_failure(ctx: &Context, command: &Command) -> Res<()> {
 }
 
 pub async fn get_link(
-    ctx: &Context,
+    bot: &Bot,
     command: &Command,
     link: &Option<String>,
     attachment: &Option<Attachment>,
 ) -> Res<String> {
     if link.is_some() {
-        get_link_from_link(ctx, command, link.clone().unwrap()).await
+        get_link_from_link(bot, command, link.clone().unwrap()).await
     } else if attachment.is_some() {
-        get_link_from_attachment(ctx, command, attachment.clone().unwrap()).await
+        get_link_from_attachment(bot, command, attachment.clone().unwrap()).await
     } else {
         Err(eyre!("fucked up"))
     }

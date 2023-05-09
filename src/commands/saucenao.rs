@@ -7,10 +7,11 @@ use crate::{
     config::Config,
     events::{Cmd, Command},
     rate_limiter::RateLimiter,
-    sauce_finder, Context, Res,
+    sauce_finder, Res,
 };
 use async_trait::async_trait;
 use sauce_api::source::{saucenao::SauceNao, Source};
+use sparkle_convenience::Bot;
 use tokio::sync::RwLock;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::{
@@ -79,19 +80,14 @@ pub struct Saucenao {
 }
 
 impl Saucenao {
-    async fn execute_with_link(
-        &self,
-        ctx: Arc<Context>,
-        command: Command,
-        link: String,
-    ) -> Res<()> {
+    async fn execute_with_link(&self, bot: Arc<Bot>, command: Command, link: String) -> Res<()> {
         let cfg = Config::load();
         let source = SauceNao::create(cfg.credentials().saucenao_api_key().clone())
             .await
             .expect("never fails");
         let res = source.check(&link).await;
 
-        sauce_finder::respond(&ctx, &command, res, cfg, self.ephemeral).await?;
+        sauce_finder::respond(&bot, &command, res, cfg, self.ephemeral).await?;
 
         Ok(())
     }
@@ -99,10 +95,10 @@ impl Saucenao {
 
 #[async_trait]
 impl Cmd for Saucenao {
-    async fn execute(&self, ctx: Arc<Context>, command: Command) -> Res<()> {
+    async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
         let mut rate_limits = unsafe { RATE_LIMITS.write().await };
 
-        let interaction_client = ctx.interaction_client();
+        let interaction_client = bot.interaction_client();
 
         if rate_limits.limited() {
             let cause = rate_limits.cause();
@@ -129,12 +125,12 @@ impl Cmd for Saucenao {
         }
 
         if self.link.is_none() && self.attachment.is_none() {
-            sauce_finder::respond_failure(&ctx, &command).await?;
+            sauce_finder::respond_failure(&bot, &command).await?;
         }
 
-        let link = sauce_finder::get_link(&ctx, &command, &self.link, &self.attachment).await?;
+        let link = sauce_finder::get_link(&bot, &command, &self.link, &self.attachment).await?;
 
-        self.execute_with_link(ctx, command, link).await?;
+        self.execute_with_link(bot, command, link).await?;
 
         Ok(())
     }
