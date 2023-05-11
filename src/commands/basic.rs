@@ -142,7 +142,7 @@ impl Cmd for InviteCommand {
     async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
         let handle = bot.interaction_handle(&command);
 
-        handle.reply(Reply::new().content("To invite the bot to your server, please go to <https://discord.com/oauth2/authorize?client_id=778822593293058051&scope=bot,applications.commands&permissions=19456>").ephemeral()).await?;
+        handle.reply(Reply::new().content("To invite the bot to your server, please go to <https://discord.com/oauth2/authorize?client_id=778822593293058051&scope=bot%20applications.commands&permissions=19456>").ephemeral()).await?;
 
         Ok(())
     }
