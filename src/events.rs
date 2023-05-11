@@ -26,7 +26,7 @@ use twilight_model::{
 
 use crate::{
     commands::{
-        basic::{HelpCommand, IssueCommand, SupportCommand},
+        basic::{HelpCommand, InviteCommand, IssueCommand, SupportCommand},
         fuzzysearch::FuzzySearch,
         iqdb::Iqdb,
         saucenao::Saucenao,
@@ -139,6 +139,12 @@ pub async fn interaction_create(bot: Arc<Bot>, interaction: Box<InteractionCreat
                 let support_command = SupportCommand::from_interaction(input_data)?;
 
                 support_command.execute(ctx, cmd).await
+            }
+
+            "invite" => {
+                let invite_command = InviteCommand::from_interaction(input_data)?;
+
+                invite_command.execute(ctx, cmd).await
             }
 
             "iqdb" => {

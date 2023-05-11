@@ -17,8 +17,9 @@ pub fn get() -> Vec<ApplicationCommandData> {
 
     let issue = IssueCommand::create_command();
     let support = SupportCommand::create_command();
+    let invite = InviteCommand::create_command();
 
-    vec![help, issue, support]
+    vec![help, issue, support, invite]
 }
 
 #[derive(CommandModel, CreateCommand)]
