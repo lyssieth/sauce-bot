@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 use async_trait::async_trait;
 use sparkle_convenience::Bot;
@@ -8,7 +8,7 @@ use twilight_interactions::command::{CommandInputData, CommandModel};
 use twilight_model::{
     application::{
         command::CommandType,
-        interaction::{InteractionData, InteractionType},
+        interaction::{Interaction, InteractionData, InteractionType},
     },
     gateway::{
         payload::{
@@ -87,7 +87,7 @@ pub async fn interaction_create(bot: Arc<Bot>, interaction: Box<InteractionCreat
         _ => return Ok(()),
     };
 
-    let data = interaction.data;
+    let data = interaction.data.clone();
 
     let Some(data) = data else {
         return Ok(());
@@ -102,7 +102,7 @@ pub async fn interaction_create(bot: Arc<Bot>, interaction: Box<InteractionCreat
         return Ok(());
     }
 
-    let token = interaction.token;
+    let token = interaction.token.clone();
     let command_id = data.id;
     let name = data.name.clone();
 
@@ -111,6 +111,7 @@ pub async fn interaction_create(bot: Arc<Bot>, interaction: Box<InteractionCreat
     let cmd = Command {
         name: name.clone(),
         interaction_id,
+        interaction,
         command_id,
         token,
     };
@@ -187,8 +188,17 @@ fn after(cmd: &Command, res: Res<()>) {
 pub struct Command {
     pub name: String,
     pub interaction_id: Id<InteractionMarker>,
+    pub interaction: Interaction,
     pub command_id: Id<CommandMarker>,
     pub token: String,
+}
+
+impl Deref for Command {
+    type Target = Interaction;
+
+    fn deref(&self) -> &Self::Target {
+        &self.interaction
+    }
 }
 
 #[async_trait]

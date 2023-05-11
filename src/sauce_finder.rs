@@ -2,7 +2,7 @@ use crate::{config::Config, events::Command, Res};
 use color_eyre::eyre::eyre;
 use num_traits::FromPrimitive;
 use sauce_api::{error::Error, source::Output};
-use sparkle_convenience::Bot;
+use sparkle_convenience::{reply::Reply, Bot};
 use tracing::error;
 use twilight_model::{
     channel::{
@@ -15,19 +15,11 @@ use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder
 use url::Url;
 
 pub async fn get_link_from_link(bot: &Bot, command: &Command, link: String) -> Res<String> {
-    let interaction_client = bot.interaction_client();
+    let handle = bot.interaction_handle(command);
 
     if Url::parse(&link).is_err() {
-        let resp = InteractionResponseDataBuilder::new()
-            .content("Invalid link provided".to_owned())
-            .flags(MessageFlags::EPHEMERAL);
-        let resp = InteractionResponse {
-            kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(resp.build()),
-        };
-
-        interaction_client
-            .create_response(command.interaction_id, &command.token, &resp)
+        handle
+            .reply(Reply::new().ephemeral().content("Invalid link provided"))
             .await?;
 
         return Err(eyre!("invalid link provided"));
@@ -41,20 +33,16 @@ pub async fn get_link_from_attachment(
     command: &Command,
     attachment: Attachment,
 ) -> Res<String> {
-    let interaction_client = bot.interaction_client();
+    let handle = bot.interaction_handle(command);
 
     if let Some(content_type) = attachment.content_type {
         if !content_type.starts_with("image/") {
-            let resp = InteractionResponseDataBuilder::new()
-                .content("Invalid attachment provided".to_owned())
-                .flags(MessageFlags::EPHEMERAL);
-            let resp = InteractionResponse {
-                kind: InteractionResponseType::ChannelMessageWithSource,
-                data: Some(resp.build()),
-            };
-
-            interaction_client
-                .create_response(command.interaction_id, &command.token, &resp)
+            handle
+                .reply(
+                    Reply::new()
+                        .ephemeral()
+                        .content("Invalid attachment provided"),
+                )
                 .await?;
 
             return Err(eyre!("invalid attachment provided"));
@@ -71,7 +59,7 @@ pub async fn respond(
     cfg: Config,
     ephemeral: Option<bool>,
 ) -> Res<()> {
-    let interaction_client = bot.interaction_client();
+    let handle = bot.interaction_handle(command);
     if let Ok(result) = res {
         let mut embed = EmbedBuilder::new()
             .title("Results")
@@ -104,36 +92,24 @@ pub async fn respond(
 
         let embed = embed.build();
 
-        let mut resp = InteractionResponseDataBuilder::new().embeds(vec![embed]);
+        let mut reply = Reply::new().embed(embed);
+
         if let Some(ephemeral) = ephemeral {
             if ephemeral {
-                resp = resp.flags(MessageFlags::EPHEMERAL);
+                reply = reply.ephemeral();
             }
         }
-        let resp = InteractionResponse {
-            kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(resp.build()),
-        };
 
-        interaction_client
-            .create_response(command.interaction_id, &command.token, &resp)
-            .await?;
+        handle.reply(reply).await?;
     } else if let Err(e) = res {
         error!(?e, "Failed to execute");
-        let mut resp = InteractionResponseDataBuilder::new()
-            .content(format!("Failed to execute command: {e}"));
-        if let Some(ephemeral) = ephemeral {
-            if ephemeral {
-                resp = resp.flags(MessageFlags::EPHEMERAL);
-            }
-        }
-        let resp = InteractionResponse {
-            kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(resp.build()),
-        };
 
-        interaction_client
-            .create_response(command.interaction_id, &command.token, &resp)
+        handle
+            .reply(
+                Reply::new()
+                    .ephemeral()
+                    .content(format!("Failed to execute command: {e}")),
+            )
             .await?;
     }
 
@@ -163,10 +139,10 @@ pub async fn get_link(
     link: &Option<String>,
     attachment: &Option<Attachment>,
 ) -> Res<String> {
-    if link.is_some() {
-        get_link_from_link(bot, command, link.clone().unwrap()).await
-    } else if attachment.is_some() {
-        get_link_from_attachment(bot, command, attachment.clone().unwrap()).await
+    if let Some(link) = link {
+        get_link_from_link(bot, command, link.clone()).await
+    } else if let Some(attachment) = attachment {
+        get_link_from_attachment(bot, command, attachment.clone()).await
     } else {
         Err(eyre!("fucked up"))
     }

@@ -21,10 +21,10 @@ sauce-api = { git = "https://github.com/lyssieth/sauce-api", default-features = 
     "fuzzysearch",
     "rustls",
 ] }
-serde = { version = "1.0.162", features = ["derive"] }
+serde = { version = "1.0.163", features = ["derive"] }
 # serenity = "0.10.10"
 smart-default = "0.7.1"
-tokio = { version = "1.28.0", features = ["full"] }
+tokio = { version = "1.28.1", features = ["full"] }
 toml = "0.7.3"
 url = "2.3.1"
 twilight-gateway = "0.15.2"

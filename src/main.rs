@@ -1,4 +1,5 @@
-#![warn(clippy::pedantic, clippy::nursery)]
+#![warn(clippy::pedantic, clippy::nursery, clippy::perf)]
+#![deny(clippy::unwrap_used)]
 #![feature(lazy_cell)]
 
 use futures::StreamExt;

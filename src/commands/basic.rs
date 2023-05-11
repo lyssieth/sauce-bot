@@ -1,13 +1,10 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use sparkle_convenience::Bot;
+use sparkle_convenience::{reply::Reply, Bot};
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
-use twilight_model::{
-    channel::message::{embed::EmbedField, MessageFlags},
-    http::interaction::{InteractionResponse, InteractionResponseType},
-};
-use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+use twilight_model::channel::message::embed::EmbedField;
+use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{
     config::Config,
@@ -30,8 +27,8 @@ pub struct HelpCommand;
 
 #[async_trait]
 impl Cmd for HelpCommand {
-    async fn execute(&self, ctx: Arc<Bot>, command: Command) -> Res<()> {
-        let interaction_client = ctx.interaction_client();
+    async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
+        let handle = bot.interaction_handle(&command);
 
         let cfg = Config::load();
         let cfg = cfg.settings();
@@ -72,17 +69,7 @@ impl Cmd for HelpCommand {
             .color(0x8B_D8C6)
             .build();
 
-        let resp = InteractionResponseDataBuilder::new()
-            .embeds(vec![embed])
-            .flags(MessageFlags::EPHEMERAL);
-        let resp = InteractionResponse {
-            kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(resp.build()),
-        };
-
-        interaction_client
-            .create_response(command.interaction_id, &command.token, &resp)
-            .await?;
+        handle.reply(Reply::new().embed(embed).ephemeral()).await?;
 
         Ok(())
     }
@@ -98,22 +85,9 @@ pub struct IssueCommand;
 #[async_trait]
 impl Cmd for IssueCommand {
     async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
-        let interaction_client = bot.interaction_client();
+        let handle = bot.interaction_handle(&command);
 
-        let resp = InteractionResponseDataBuilder::new()
-            .content(
-                "To report an issue, please go to <https://github.com/lyssieth/sauce-bot/issues>"
-                    .to_owned(),
-            )
-            .flags(MessageFlags::EPHEMERAL);
-        let resp = InteractionResponse {
-            kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(resp.build()),
-        };
-
-        interaction_client
-            .create_response(command.interaction_id, &command.token, &resp)
-            .await?;
+        handle.reply(Reply::new().content("To report an issue, please go to <https://github.com/lyssieth/sauce-bot/issues>").ephemeral()).await?;
 
         Ok(())
     }
@@ -129,7 +103,7 @@ pub struct SupportCommand;
 #[async_trait]
 impl Cmd for SupportCommand {
     async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
-        let interaction_client = bot.interaction_client();
+        let handle = bot.interaction_handle(&command);
 
         let embed = EmbedBuilder::new()
             .title("Support")
@@ -147,17 +121,22 @@ impl Cmd for SupportCommand {
             .color(0x8B_D8C6)
             .build();
 
-        let resp = InteractionResponseDataBuilder::new()
-            .embeds(vec![embed])
-            .flags(MessageFlags::EPHEMERAL);
-        let resp = InteractionResponse {
-            kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(resp.build()),
-        };
+        handle.reply(Reply::new().embed(embed).ephemeral()).await?;
 
-        interaction_client
-            .create_response(command.interaction_id, &command.token, &resp)
-            .await?;
+        Ok(())
+    }
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(name = "invite", desc = "Provides an invite link for the bot")]
+pub struct InviteCommand;
+
+#[async_trait]
+impl Cmd for InviteCommand {
+    async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
+        let handle = bot.interaction_handle(&command);
+
+        handle.reply(Reply::new().content("To invite the bot to your server, please go to <https://discord.com/oauth2/authorize?client_id=778822593293058051&scope=bot,applications.commands&permissions=19456>").ephemeral()).await?;
 
         Ok(())
     }
