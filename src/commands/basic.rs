@@ -36,34 +36,39 @@ impl Cmd for HelpCommand {
 
         let embed = EmbedBuilder::new()
             .title("Help")
-            .description(format!("All commands use the `sauce!` prefix. Some commands might take a few seconds due to calling a potentially slow web service.\nSettings:\n- Links Displayed: {}", cfg.top_links()))
+            .description(format!("All commands are now slash command based. Some commands might take a few seconds due to calling a potentially slow web service.\nSettings:\n- Links Displayed: up to {}", cfg.top_links()))
             .field(EmbedField {
-                name: "sauce!saucenao <link>".to_owned(),
-                value: "Takes a link and uses the saucenao backend to get results. Fast, but has rate limits. Checks more locations.\nAlso works with `sauce!nao`\n\nRate limits:\n- 6 searches in 30 seconds\n- 200 searches in 24 hours\nThese apply globally across the bot.".to_owned(),
+                name: "/saucenao <link>".to_owned(),
+                value: "Takes a link and uses the saucenao backend to get results. Fast, but has rate limits. Checks more locations.\n\nRate limits:\n- 6 searches in 30 seconds\n- 200 searches in 24 hours\nThese apply globally across the bot.".to_owned(),
                 inline: false,
             })
             .field(EmbedField {
-                name: "sauce!iqdb <link>".to_owned(),
+                name: "/iqdb <link>".to_owned(),
                 value: "Takes a link and uses the iqdb backend to get results. Slower, without any rate limits, checks more locations.".to_owned(),
                 inline: false,
             })
             .field(EmbedField {
-                name: "sauce!fuzzy <link>".to_owned(),
+                name: "/fuzzysearch <link>".to_owned(),
                 value: "Takes a link and uses the fuzzysearch backend to get results. Fast, has rate limits\nBetter for furry/brony art than anything else.".to_owned(),
                 inline: false,
             })
             .field(EmbedField {
-                name: "sauce!issue".to_owned(),
+                name: "/invite".to_owned(),
+                value: "Provides an invite link for the bot.".to_owned(),
+                inline: false,
+            })
+            .field(EmbedField {
+                name: "/issue".to_owned(),
                 value: "Provides a link to the github to report issues with the bot.".to_owned(),
                 inline: false,
             })
             .field(EmbedField {
-                name: "sauce!support".to_owned(),
+                name: "/support".to_owned(),
                 value: "Provides a link to ways to support the bot.\nThis will help keep the VPS up and running, as well as increase SauceNao rate limits.".to_owned(),
                 inline: false,
             })
             .field(EmbedField {
-                name: "sauce!help".to_owned(),
+                name: "/help".to_owned(),
                 value: "Provides help about the bot.".to_owned(),
                 inline: false,
             })
