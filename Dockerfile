@@ -1,4 +1,4 @@
-FROM clux/muslrust:nightly-2023-05-10 as builder
+FROM clux/muslrust:nightly-2023-07-10 as builder
 
 LABEL name="lyssieth/sauce-bot"
 LABEL maintainer="Lyssieth <lyssieth@rax.ee>"

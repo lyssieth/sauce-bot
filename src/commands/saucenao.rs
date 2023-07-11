@@ -100,9 +100,15 @@ impl Cmd for Saucenao {
 
         let interaction_client = bot.interaction_client();
 
-        if rate_limits.limited() {
-            let cause = rate_limits.cause();
+        let cause = if rate_limits.limited() {
+            Some(rate_limits.cause())
+        } else {
+            None
+        };
 
+        drop(rate_limits);
+
+        if let Some(cause) = cause {
             let resp = match cause {
                 Cause::Short => InteractionResponseDataBuilder::new()
                     .content("You are being rate limited. Please wait up to 30 seconds before trying again. (sorry, the rate limits on SauceNao are like this. Consider `/support`ing the bot's creator)".to_owned())
