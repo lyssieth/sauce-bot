@@ -1,22 +1,14 @@
-use crate::{config::Config, events::Command, Res};
+use crate::{config::Config, handle::Handle, Res};
 use color_eyre::eyre::eyre;
 use num_traits::FromPrimitive;
 use sauce_api::{error::Error, source::Output};
-use sparkle_convenience::{reply::Reply, Bot};
+use sparkle_convenience::reply::Reply;
 use tracing::error;
-use twilight_model::{
-    channel::{
-        message::{embed::EmbedField, MessageFlags},
-        Attachment,
-    },
-    http::interaction::{InteractionResponse, InteractionResponseType},
-};
-use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+use twilight_model::channel::{message::embed::EmbedField, Attachment};
+use twilight_util::builder::embed::EmbedBuilder;
 use url::Url;
 
-pub async fn get_link_from_link(bot: &Bot, command: &Command, link: String) -> Res<String> {
-    let handle = bot.interaction_handle(command);
-
+pub async fn get_link_from_link(handle: &Handle, link: String) -> Res<String> {
     if Url::parse(&link).is_err() {
         handle
             .reply(Reply::new().ephemeral().content("Invalid link provided"))
@@ -28,13 +20,7 @@ pub async fn get_link_from_link(bot: &Bot, command: &Command, link: String) -> R
     Ok(link)
 }
 
-pub async fn get_link_from_attachment(
-    bot: &Bot,
-    command: &Command,
-    attachment: Attachment,
-) -> Res<String> {
-    let handle = bot.interaction_handle(command);
-
+pub async fn get_link_from_attachment(handle: &Handle, attachment: Attachment) -> Res<String> {
     if let Some(content_type) = attachment.content_type {
         if !content_type.starts_with("image/") {
             handle
@@ -53,13 +39,11 @@ pub async fn get_link_from_attachment(
 }
 
 pub async fn respond(
-    bot: &Bot,
-    command: &Command,
+    handle: Handle,
     res: Result<Output, Error>,
     cfg: Config,
     ephemeral: Option<bool>,
 ) -> Res<()> {
-    let handle = bot.interaction_handle(command);
     if let Ok(result) = res {
         let mut embed = EmbedBuilder::new()
             .title("Results")
@@ -116,33 +100,25 @@ pub async fn respond(
     Ok(())
 }
 
-pub async fn respond_failure(bot: &Bot, command: &Command) -> Res<()> {
-    let interaction_client = bot.interaction_client();
-    let resp = InteractionResponseDataBuilder::new()
-        .content("No image was provided, whether by link or attachment.".to_owned())
-        .flags(MessageFlags::EPHEMERAL);
-    let resp = InteractionResponse {
-        kind: InteractionResponseType::ChannelMessageWithSource,
-        data: Some(resp.build()),
-    };
+pub async fn respond_failure(handle: Handle) -> Res<()> {
+    let reply = Reply::new()
+        .ephemeral()
+        .content("No image was provided, whether by link or attachment.");
 
-    interaction_client
-        .create_response(command.interaction_id, &command.token, &resp)
-        .await?;
+    handle.reply(reply).await?;
 
     Ok(())
 }
 
 pub async fn get_link(
-    bot: &Bot,
-    command: &Command,
+    handle: &Handle,
     link: &Option<String>,
     attachment: &Option<Attachment>,
 ) -> Res<String> {
     if let Some(link) = link {
-        get_link_from_link(bot, command, link.clone()).await
+        get_link_from_link(handle, link.clone()).await
     } else if let Some(attachment) = attachment {
-        get_link_from_attachment(bot, command, attachment.clone()).await
+        get_link_from_attachment(handle, attachment.clone()).await
     } else {
         Err(eyre!("fucked up"))
     }

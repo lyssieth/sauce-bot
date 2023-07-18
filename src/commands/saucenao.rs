@@ -6,19 +6,16 @@ use std::{
 use crate::{
     config::Config,
     events::{Cmd, Command},
+    handle::{Handle, SpecialHandler},
     rate_limiter::RateLimiter,
     sauce_finder, Res,
 };
 use async_trait::async_trait;
 use sauce_api::source::{saucenao::SauceNao, Source};
-use sparkle_convenience::Bot;
+use sparkle_convenience::{interaction::DeferVisibility, reply::Reply, Bot};
 use tokio::sync::RwLock;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
-use twilight_model::{
-    channel::{message::MessageFlags, Attachment},
-    http::interaction::{InteractionResponse, InteractionResponseType},
-};
-use twilight_util::builder::InteractionResponseDataBuilder;
+use twilight_model::channel::Attachment;
 
 pub fn get() -> Vec<ApplicationCommandData> {
     vec![Saucenao::create_command()]
@@ -80,14 +77,14 @@ pub struct Saucenao {
 }
 
 impl Saucenao {
-    async fn execute_with_link(&self, bot: Arc<Bot>, command: Command, link: String) -> Res<()> {
+    async fn execute_with_link(&self, handle: Handle, link: String) -> Res<()> {
         let cfg = Config::load();
         let source = SauceNao::create(cfg.credentials().saucenao_api_key().clone())
             .await
             .expect("never fails");
         let res = source.check(&link).await;
 
-        sauce_finder::respond(&bot, &command, res, cfg, self.ephemeral).await?;
+        sauce_finder::respond(handle, res, cfg, self.ephemeral).await?;
 
         Ok(())
     }
@@ -98,7 +95,15 @@ impl Cmd for Saucenao {
     async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
         let mut rate_limits = unsafe { RATE_LIMITS.write().await };
 
-        let interaction_client = bot.interaction_client();
+        let handle = bot.handle(&command.interaction);
+
+        handle
+            .defer(if self.ephemeral.unwrap_or(false) {
+                DeferVisibility::Ephemeral
+            } else {
+                DeferVisibility::Visible
+            })
+            .await?;
 
         let cause = if rate_limits.limited() {
             Some(rate_limits.cause())
@@ -109,34 +114,28 @@ impl Cmd for Saucenao {
         drop(rate_limits);
 
         if let Some(cause) = cause {
-            let resp = match cause {
-                Cause::Short => InteractionResponseDataBuilder::new()
+            let reply = match cause {
+                Cause::Short => Reply::new()
                     .content("You are being rate limited. Please wait up to 30 seconds before trying again. (sorry, the rate limits on SauceNao are like this. Consider `/support`ing the bot's creator)".to_owned())
-                    .flags(MessageFlags::EPHEMERAL),
-                Cause::Long => InteractionResponseDataBuilder::new()
+                    .ephemeral(),
+                Cause::Long => Reply::new()
                     .content("You are being rate limited. Please wait up to 24 hours for it to fix. (sorry, the rate limits on SauceNao are like this. Consider `/support`ing the bot's creator)".to_owned())
-                    .flags(MessageFlags::EPHEMERAL),
+                    .ephemeral(),
             };
 
-            let resp = InteractionResponse {
-                kind: InteractionResponseType::ChannelMessageWithSource,
-                data: Some(resp.build()),
-            };
-
-            interaction_client
-                .create_response(command.interaction_id, &command.token, &resp)
-                .await?;
+            handle.reply(reply).await?;
 
             return Ok(());
         }
 
         if self.link.is_none() && self.attachment.is_none() {
-            sauce_finder::respond_failure(&bot, &command).await?;
+            sauce_finder::respond_failure(handle).await?;
+            return Ok(());
         }
 
-        let link = sauce_finder::get_link(&bot, &command, &self.link, &self.attachment).await?;
+        let link = sauce_finder::get_link(&handle, &self.link, &self.attachment).await?;
 
-        self.execute_with_link(bot, command, link).await?;
+        self.execute_with_link(handle, link).await?;
 
         Ok(())
     }

@@ -12,6 +12,7 @@ use twilight_gateway::{stream::ShardEventStream, Event, EventTypeFlags, Intents}
 mod commands;
 mod config;
 mod events;
+mod handle;
 mod rate_limiter;
 mod sauce_finder;
 
@@ -48,7 +49,7 @@ async fn main() -> Res<()> {
 
     info!("Starting...");
 
-    let mut stream = ShardEventStream::new(shards.iter_mut());
+    let mut stream = ShardEventStream::new(shards.0.iter_mut());
 
     while let Some((shard, event)) = stream.next().await {
         let event = match event {

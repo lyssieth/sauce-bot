@@ -3,11 +3,12 @@ use std::sync::Arc;
 use crate::{
     config::Config,
     events::{Cmd, Command},
+    handle::{Handle, SpecialHandler},
     sauce_finder, Res,
 };
 use async_trait::async_trait;
 use sauce_api::source::{self, Source};
-use sparkle_convenience::Bot;
+use sparkle_convenience::{interaction::DeferVisibility, reply::Reply, Bot};
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::channel::Attachment;
 
@@ -32,12 +33,12 @@ pub struct Iqdb {
 }
 
 impl Iqdb {
-    async fn execute_with_link(&self, bot: Arc<Bot>, command: Command, link: String) -> Res<()> {
+    async fn execute_with_link(&self, handle: Handle, link: String) -> Res<()> {
         let cfg = Config::load();
         let source = source::iqdb::Iqdb::create(()).await.expect("never fails");
         let res = source.check(&link).await;
 
-        sauce_finder::respond(&bot, &command, res, cfg, self.ephemeral).await?;
+        sauce_finder::respond(handle, res, cfg, self.ephemeral).await?;
 
         Ok(())
     }
@@ -46,14 +47,35 @@ impl Iqdb {
 #[async_trait]
 impl Cmd for Iqdb {
     async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
-        if self.link.is_none() && self.attachment.is_none() {
-            sauce_finder::respond_failure(&bot, &command).await?;
-        }
+        let handle = bot.handle(&command.interaction);
 
-        let link = sauce_finder::get_link(&bot, &command, &self.link, &self.attachment).await?;
+        handle
+            .reply(
+                Reply::new()
+                    .content("IQDB is currently broken :/")
+                    .ephemeral(),
+            )
+            .await?;
 
-        self.execute_with_link(bot, command, link).await?;
+        return Ok(());
 
-        Ok(())
+        // if self.link.is_none() && self.attachment.is_none() {
+        //     sauce_finder::respond_failure(handle).await?;
+        //     return Ok(());
+        // }
+
+        // handle
+        //     .defer(if self.ephemeral.unwrap_or(false) {
+        //         DeferVisibility::Ephemeral
+        //     } else {
+        //         DeferVisibility::Visible
+        //     })
+        //     .await?;
+
+        // let link = sauce_finder::get_link(&handle, &self.link, &self.attachment).await?;
+
+        // self.execute_with_link(handle, link).await?;
+
+        // Ok(())
     }
 }
