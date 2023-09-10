@@ -1,3 +1,5 @@
+#![allow(dead_code)] // TODO: Fix when IQDB isn't broken :\
+
 use std::sync::Arc;
 
 use crate::{
@@ -8,7 +10,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use sauce_api::source::{self, Source};
-use sparkle_convenience::{interaction::DeferVisibility, reply::Reply, Bot};
+use sparkle_convenience::{reply::Reply, Bot};
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::channel::Attachment;
 
