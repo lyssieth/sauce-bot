@@ -24,7 +24,7 @@ sauce-api = { git = "https://github.com/lyssieth/sauce-api", default-features = 
 serde = { version = "1.0.188", features = ["derive"] }
 smart-default = "0.7.1"
 tokio = { version = "1.32.0", features = ["full"] }
-toml = "0.7.8"
+toml = "0.8.0"
 url = "2.4.1"
 twilight-gateway = "0.15.4"
 twilight-http = "0.15.4"
@@ -35,3 +35,8 @@ twilight-util = { version = "0.15.4", features = ["full"] }
 async-trait = "0.1.73"
 num-traits = "0.2.16"
 sparkle-convenience = "0.16.0-rc.3"
+openssl = {optional=true,version="*"}
+
+[features]
+default = ["static_ssl"]
+static_ssl = ["openssl/vendored"]
