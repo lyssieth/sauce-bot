@@ -1,10 +1,10 @@
-use crate::{config::Config, handle::Handle, Res};
+use crate::{Res, config::Config, handle::Handle};
 use color_eyre::eyre::eyre;
 use num_traits::FromPrimitive;
 use sauce_api::{error::Error, source::Output};
 use sparkle_convenience::reply::Reply;
 use tracing::error;
-use twilight_model::channel::{message::embed::EmbedField, Attachment};
+use twilight_model::channel::{Attachment, message::embed::EmbedField};
 use twilight_util::builder::embed::EmbedBuilder;
 use url::Url;
 
@@ -21,18 +21,18 @@ pub async fn get_link_from_link(handle: &Handle, link: String) -> Res<String> {
 }
 
 pub async fn get_link_from_attachment(handle: &Handle, attachment: Attachment) -> Res<String> {
-    if let Some(content_type) = attachment.content_type {
-        if !content_type.starts_with("image/") {
-            handle
-                .reply(
-                    Reply::new()
-                        .ephemeral()
-                        .content("Invalid attachment provided"),
-                )
-                .await?;
+    if let Some(content_type) = attachment.content_type
+        && !content_type.starts_with("image/")
+    {
+        handle
+            .reply(
+                Reply::new()
+                    .ephemeral()
+                    .content("Invalid attachment provided"),
+            )
+            .await?;
 
-            return Err(eyre!("invalid attachment provided"));
-        }
+        return Err(eyre!("invalid attachment provided"));
     }
 
     Ok(attachment.url)
@@ -78,10 +78,10 @@ pub async fn respond(
 
         let mut reply = Reply::new().embed(embed);
 
-        if let Some(ephemeral) = ephemeral {
-            if ephemeral {
-                reply = reply.ephemeral();
-            }
+        if let Some(ephemeral) = ephemeral
+            && ephemeral
+        {
+            reply = reply.ephemeral();
         }
 
         handle.reply(reply).await?;
@@ -112,8 +112,8 @@ pub async fn respond_failure(handle: Handle) -> Res<()> {
 
 pub async fn get_link(
     handle: &Handle,
-    link: &Option<String>,
-    attachment: &Option<Attachment>,
+    link: Option<&String>,
+    attachment: Option<&Attachment>,
 ) -> Res<String> {
     if let Some(link) = link {
         get_link_from_link(handle, link.clone()).await

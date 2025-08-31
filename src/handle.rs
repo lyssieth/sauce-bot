@@ -1,13 +1,12 @@
 use std::sync::{
-    atomic::{AtomicBool, AtomicU64, Ordering},
     Arc,
+    atomic::{AtomicBool, AtomicU64, Ordering},
 };
 
 use sparkle_convenience::{
-    error::{Error, UserError},
-    interaction::{DeferBehavior, DeferVisibility},
-    reply::Reply,
     Bot,
+    error::{Error, UserError},
+    reply::Reply,
 };
 use twilight_model::{
     application::{
@@ -15,17 +14,17 @@ use twilight_model::{
         interaction::{Interaction, InteractionType},
     },
     channel::{
-        message::{
-            component::{ActionRow, TextInput},
-            Component, MessageFlags,
-        },
         Message,
+        message::{
+            Component,
+            component::{ActionRow, TextInput},
+        },
     },
     guild::Permissions,
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
     id::{
-        marker::{InteractionMarker, MessageMarker},
         Id,
+        marker::{InteractionMarker, MessageMarker},
     },
 };
 
@@ -93,41 +92,29 @@ impl Handle {
         }
     }
 
-    pub async fn defer(&self, visibility: DeferVisibility) -> Result<(), Error> {
-        self.defer_with_behavior(visibility, DeferBehavior::Followup)
-            .await
-    }
-
-    pub async fn defer_component(
-        &self,
-        visibility: DeferVisibility,
-        behavior: DeferBehavior,
-    ) -> Result<(), Error> {
-        self.defer_with_behavior(visibility, behavior).await
-    }
-
     pub async fn reply(&self, reply: Reply) -> Result<Option<Message>, Error> {
+        let client = self.bot.reply_handle(&reply);
+        let interaction = self.bot.http.interaction(self.bot.application.id);
         if self.responded() {
-            let client = self.bot.interaction_client();
-
             if reply.update_last {
                 if let Some(last_message_id) = self.last_message_id() {
-                    let mut update_followup = client.update_followup(&self.token, last_message_id);
+                    let mut update_followup =
+                        interaction.update_followup(&self.token, last_message_id);
 
                     if let Some(allowed_mentions) = &reply.allowed_mentions {
                         update_followup =
                             update_followup.allowed_mentions(allowed_mentions.as_ref());
                     }
                     update_followup
-                        .content((!reply.content.is_empty()).then_some(&reply.content))?
-                        .embeds(Some(&reply.embeds))?
-                        .components(Some(&reply.components))?
-                        .attachments(&reply.attachments)?
+                        .content((!reply.content.is_empty()).then_some(&reply.content))
+                        .embeds(Some(&reply.embeds))
+                        .components(Some(&reply.components))
+                        .attachments(&reply.attachments)
                         .await?;
 
                     Ok(None)
                 } else {
-                    let mut update_response = client.update_response(&self.token);
+                    let mut update_response = interaction.update_response(&self.token);
 
                     if let Some(allowed_mentions) = &reply.allowed_mentions {
                         update_response =
@@ -135,10 +122,10 @@ impl Handle {
                     }
 
                     let message = update_response
-                        .content((!reply.content.is_empty()).then_some(&reply.content))?
-                        .embeds(Some(&reply.embeds))?
-                        .components(Some(&reply.components))?
-                        .attachments(&reply.attachments)?
+                        .content((!reply.content.is_empty()).then_some(&reply.content))
+                        .embeds(Some(&reply.embeds))
+                        .components(Some(&reply.components))
+                        .attachments(&reply.attachments)
                         .await?
                         .model()
                         .await?;
@@ -148,19 +135,19 @@ impl Handle {
                     Ok(Some(message))
                 }
             } else {
-                let mut followup = client.create_followup(&self.token);
+                let mut followup = interaction.create_followup(&self.token);
 
                 if !reply.content.is_empty() {
-                    followup = followup.content(&reply.content)?;
+                    followup = followup.content(&reply.content);
                 }
                 if let Some(allowed_mentions) = &reply.allowed_mentions {
                     followup = followup.allowed_mentions(allowed_mentions.as_ref());
                 }
 
                 let message = followup
-                    .embeds(&reply.embeds)?
-                    .components(&reply.components)?
-                    .attachments(&reply.attachments)?
+                    .embeds(&reply.embeds)
+                    .components(&reply.components)
+                    .attachments(&reply.attachments)
                     .flags(reply.flags)
                     .tts(reply.tts)
                     .await?
@@ -178,8 +165,7 @@ impl Handle {
                 InteractionResponseType::ChannelMessageWithSource
             };
 
-            self.bot
-                .interaction_client()
+            interaction
                 .create_response(
                     self.id,
                     &self.token,
@@ -201,8 +187,9 @@ impl Handle {
             return Err(Error::AlreadyResponded);
         }
 
-        self.bot
-            .interaction_client()
+        let interaction = self.bot.http.interaction(self.bot.application.id);
+
+        interaction
             .create_response(
                 self.id,
                 &self.token,
@@ -233,8 +220,9 @@ impl Handle {
             return Err(Error::AlreadyResponded);
         }
 
-        self.bot
-            .interaction_client()
+        let interaction = self.bot.http.interaction(self.bot.application.id);
+
+        interaction
             .create_response(
                 self.id,
                 &self.token,
@@ -264,45 +252,6 @@ impl Handle {
         Ok(())
     }
 
-    async fn defer_with_behavior(
-        &self,
-        visibility: DeferVisibility,
-        behavior: DeferBehavior,
-    ) -> Result<(), Error> {
-        if self.responded() {
-            return Err(Error::AlreadyResponded);
-        }
-
-        let kind = if self.kind == InteractionType::MessageComponent {
-            match behavior {
-                DeferBehavior::Followup => {
-                    InteractionResponseType::DeferredChannelMessageWithSource
-                }
-                DeferBehavior::Update => InteractionResponseType::DeferredUpdateMessage,
-            }
-        } else {
-            InteractionResponseType::DeferredChannelMessageWithSource
-        };
-
-        let defer_response = InteractionResponse {
-            kind,
-            data: Some(InteractionResponseData {
-                flags: (visibility == DeferVisibility::Ephemeral)
-                    .then_some(MessageFlags::EPHEMERAL),
-                ..Default::default()
-            }),
-        };
-
-        self.bot
-            .interaction_client()
-            .create_response(self.id, &self.token, &defer_response)
-            .await?;
-
-        self.set_responded(true);
-
-        Ok(())
-    }
-
     fn responded(&self) -> bool {
         self.responded.load(Ordering::Acquire)
     }
@@ -313,11 +262,7 @@ impl Handle {
 
     fn last_message_id(&self) -> Option<Id<MessageMarker>> {
         let id = self.last_message_id.load(Ordering::Acquire);
-        if id == 0 {
-            None
-        } else {
-            Some(Id::new(id))
-        }
+        if id == 0 { None } else { Some(Id::new(id)) }
     }
 
     fn set_last_message_id(&self, val: Id<MessageMarker>) {

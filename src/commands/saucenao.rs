@@ -4,18 +4,22 @@ use std::{
 };
 
 use crate::{
+    Res,
     config::Config,
     events::{Cmd, Command},
     handle::{Handle, SpecialHandler},
     rate_limiter::RateLimiter,
-    sauce_finder, Res,
+    sauce_finder,
 };
 use async_trait::async_trait;
-use sauce_api::source::{saucenao::SauceNao, Source};
-use sparkle_convenience::{interaction::DeferVisibility, reply::Reply, Bot};
+use sauce_api::source::{Source, saucenao::SauceNao};
+use sparkle_convenience::{Bot, reply::Reply};
 use tokio::sync::RwLock;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
-use twilight_model::channel::Attachment;
+use twilight_model::{
+    channel::{Attachment, message::MessageFlags},
+    http::interaction::{InteractionResponse, InteractionResponseType},
+};
 
 pub fn get() -> Vec<ApplicationCommandData> {
     vec![Saucenao::create_command()]
@@ -57,7 +61,7 @@ impl RateLimits {
     }
 }
 
-static mut RATE_LIMITS: LazyLock<Arc<RwLock<RateLimits>>> =
+static RATE_LIMITS: LazyLock<Arc<RwLock<RateLimits>>> =
     LazyLock::new(|| Arc::new(RwLock::new(RateLimits::new())));
 
 #[derive(CreateCommand, CommandModel)]
@@ -93,16 +97,27 @@ impl Saucenao {
 #[async_trait]
 impl Cmd for Saucenao {
     async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
-        let mut rate_limits = unsafe { RATE_LIMITS.write().await };
+        let mut rate_limits = RATE_LIMITS.write().await;
 
         let handle = bot.handle(&command.interaction);
 
-        handle
-            .defer(if self.ephemeral.unwrap_or(false) {
-                DeferVisibility::Ephemeral
-            } else {
-                DeferVisibility::Visible
-            })
+        bot.http
+            .interaction(bot.application.id)
+            .create_response(
+                command.interaction_id,
+                &command.token,
+                &InteractionResponse {
+                    kind: InteractionResponseType::DeferredChannelMessageWithSource,
+                    data: Some(twilight_model::http::interaction::InteractionResponseData {
+                        flags: if self.ephemeral.unwrap_or_default() {
+                            Some(MessageFlags::EPHEMERAL)
+                        } else {
+                            None
+                        },
+                        ..Default::default()
+                    }),
+                },
+            )
             .await?;
 
         let cause = if rate_limits.limited() {
@@ -133,7 +148,8 @@ impl Cmd for Saucenao {
             return Ok(());
         }
 
-        let link = sauce_finder::get_link(&handle, &self.link, &self.attachment).await?;
+        let link =
+            sauce_finder::get_link(&handle, self.link.as_ref(), self.attachment.as_ref()).await?;
 
         self.execute_with_link(handle, link).await?;
 

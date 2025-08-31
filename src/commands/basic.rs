@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use sparkle_convenience::{reply::Reply, Bot};
+use sparkle_convenience::{Bot, reply::Reply};
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
 use twilight_model::channel::message::embed::EmbedField;
 use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{
+    Res,
     config::Config,
     events::{Cmd, Command},
-    Res,
 };
 
 pub fn get() -> Vec<ApplicationCommandData> {
@@ -29,8 +29,6 @@ pub struct HelpCommand;
 #[async_trait]
 impl Cmd for HelpCommand {
     async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
-        let handle = bot.interaction_handle(&command);
-
         let cfg = Config::load();
         let cfg = cfg.settings();
 
@@ -75,7 +73,17 @@ impl Cmd for HelpCommand {
             .color(0x8B_D8C6)
             .build();
 
-        handle.reply(Reply::new().embed(embed).ephemeral()).await?;
+        let reply = Reply::new().embed(embed).ephemeral();
+
+        bot.reply_handle(&reply)
+            .create_message(
+                command
+                    .channel
+                    .as_ref()
+                    .map(|v| v.id)
+                    .expect("always channel we have"),
+            )
+            .await?;
 
         Ok(())
     }
@@ -91,9 +99,22 @@ pub struct IssueCommand;
 #[async_trait]
 impl Cmd for IssueCommand {
     async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
-        let handle = bot.interaction_handle(&command);
+        let reply = Reply::new()
+            .content(
+                "To report an issue, please go to <https://github.com/lyssieth/sauce-bot/issues>",
+            )
+            .ephemeral();
+        let handle = bot.reply_handle(&reply);
 
-        handle.reply(Reply::new().content("To report an issue, please go to <https://github.com/lyssieth/sauce-bot/issues>").ephemeral()).await?;
+        handle
+            .create_message(
+                command
+                    .channel
+                    .as_ref()
+                    .map(|v| v.id)
+                    .expect("always have a channel"),
+            )
+            .await?;
 
         Ok(())
     }
@@ -109,8 +130,6 @@ pub struct SupportCommand;
 #[async_trait]
 impl Cmd for SupportCommand {
     async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
-        let handle = bot.interaction_handle(&command);
-
         let embed = EmbedBuilder::new()
             .title("Support")
                     .description("All the ways to support SauceBot.\n\nAny money gained through this will first go towards the VPS and SauceNao rate limits, after which it will go into my pocket.")
@@ -127,7 +146,9 @@ impl Cmd for SupportCommand {
             .color(0x8B_D8C6)
             .build();
 
-        handle.reply(Reply::new().embed(embed).ephemeral()).await?;
+        bot.reply_handle(&Reply::new().embed(embed).ephemeral())
+            .create_message(command.channel.as_ref().map(|v| v.id).expect("awawa"))
+            .await?;
 
         Ok(())
     }
@@ -140,9 +161,7 @@ pub struct InviteCommand;
 #[async_trait]
 impl Cmd for InviteCommand {
     async fn execute(&self, bot: Arc<Bot>, command: Command) -> Res<()> {
-        let handle = bot.interaction_handle(&command);
-
-        handle.reply(Reply::new().content("To invite the bot to your server, please go to <https://discord.com/oauth2/authorize?client_id=778822593293058051&scope=bot%20applications.commands&permissions=19456>").ephemeral()).await?;
+        bot.reply_handle(&Reply::new().content("To invite the bot to your server, please go to <https://discord.com/oauth2/authorize?client_id=778822593293058051&scope=bot%20applications.commands&permissions=19456>").ephemeral()).create_message(command.channel.as_ref().map(|v|v.id).expect("awawa")).await?;
 
         Ok(())
     }

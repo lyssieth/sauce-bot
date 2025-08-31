@@ -1,6 +1,6 @@
 [package]
 authors = ["Lyssieth <raxixor@rax.ee>"]
-edition = "2021"
+edition = "2024"
 name = "sauce_bot"
 version = "0.1.0"
 publish = false
@@ -21,20 +21,20 @@ sauce-api = { git = "https://github.com/lyssieth/sauce-api", default-features = 
     "fuzzysearch",
     "rustls",
 ] }
-serde = { version = "1.0.188", features = ["derive"] }
-smart-default = "0.7.1"
-tokio = { version = "1.32.0", features = ["full"] }
-toml = "0.8.0"
-url = "2.4.1"
-twilight-gateway = "0.15.4"
-twilight-http = "0.15.4"
-twilight-model = "0.15.4"
-futures = "0.3.28"
-twilight-interactions = "0.15.2"
-twilight-util = { version = "0.15.4", features = ["full"] }
-async-trait = "0.1.73"
-num-traits = "0.2.16"
-sparkle-convenience = "0.16.0-rc.3"
+serde = { version = "1.0", features = ["derive"] }
+smart-default = "0.7"
+tokio = { version = "1", features = ["full"] }
+toml = "0.9"
+url = "2.4"
+twilight-gateway = "0.16"
+twilight-http = "0.16"
+twilight-model = "0.16"
+futures = "0.3"
+twilight-interactions = "0.16"
+twilight-util = { version = "0.16", features = ["full"] }
+async-trait = "0.1"
+num-traits = "0.2"
+sparkle-convenience = { git = "https://github.com/lyssieth/sparkle_convenience" }
 openssl = {optional=true,version="*"}
 
 [features]

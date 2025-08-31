@@ -3,62 +3,39 @@ use std::{ops::Deref, sync::Arc};
 use async_trait::async_trait;
 use sparkle_convenience::Bot;
 use tracing::{debug, error, info};
-use twilight_gateway::stream::ShardRef;
 use twilight_interactions::command::{CommandInputData, CommandModel};
 use twilight_model::{
     application::{
         command::CommandType,
         interaction::{Interaction, InteractionData, InteractionType},
     },
-    gateway::{
-        payload::{
-            incoming::{InteractionCreate, Ready},
-            outgoing::UpdatePresence,
-        },
-        presence::{Activity, ActivityType, MinimalActivity, Status},
-    },
+    gateway::payload::incoming::InteractionCreate,
     guild::Permissions,
     id::{
-        marker::{CommandMarker, InteractionMarker},
         Id,
+        marker::{CommandMarker, InteractionMarker},
     },
 };
 
 use crate::{
+    Res,
     commands::{
         basic::{HelpCommand, InviteCommand, IssueCommand, SupportCommand},
         fuzzysearch::FuzzySearch,
         iqdb::Iqdb,
         saucenao::Saucenao,
     },
-    Res,
 };
 
-pub async fn ready(mut shard: ShardRef<'_>, bot: Arc<Bot>, ready: Box<Ready>) -> Res<()> {
-    let activity = Activity::from(MinimalActivity {
-        kind: ActivityType::Playing,
-        name: "/help - slash commands!".to_string(),
-        url: None,
-    });
-
-    let command = UpdatePresence::new(vec![activity], false, None, Status::Online)?;
-
-    shard.command(&command).await?;
-
-    info!(
-        "Shard {} ready, logged in as {}",
-        shard.id(),
-        ready.user.name
-    );
-
+pub async fn ready(bot: Arc<Bot>) -> Res<()> {
     let commands = crate::commands::get();
-    let interaction_client = bot.interaction_client();
+    let interaction_client = bot.http.interaction(bot.application.id);
 
     for x in commands {
         let cg = interaction_client
             .create_global_command()
-            .chat_input(&x.name, &x.description)?
-            .command_options(&x.options)?
+            .chat_input(&x.name, &x.description)
+            .command_options(&x.options)
             .default_member_permissions(
                 x.default_member_permissions.unwrap_or(Permissions::empty()),
             )
@@ -85,7 +62,7 @@ pub async fn interaction_create(bot: Arc<Bot>, interaction: Box<InteractionCreat
     match interaction.kind {
         InteractionType::ApplicationCommand => {}
         _ => return Ok(()),
-    };
+    }
 
     let data = interaction.data.clone();
 
@@ -112,7 +89,7 @@ pub async fn interaction_create(bot: Arc<Bot>, interaction: Box<InteractionCreat
         name: name.clone(),
         interaction_id,
         interaction,
-        command_id,
+        id: command_id,
         token,
     };
 
@@ -192,10 +169,11 @@ fn after(cmd: &Command, res: Res<()>) {
 
 #[derive(Debug, Clone)]
 pub struct Command {
-    pub name: String,
-    pub interaction_id: Id<InteractionMarker>,
+    #[allow(dead_code)]
+    pub id: Id<CommandMarker>,
     pub interaction: Interaction,
-    pub command_id: Id<CommandMarker>,
+    pub interaction_id: Id<InteractionMarker>,
+    pub name: String,
     pub token: String,
 }
 

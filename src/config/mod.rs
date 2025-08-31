@@ -28,7 +28,8 @@ impl Config {
 
     pub fn load() -> Self {
         let path = Self::get_path();
-        let conf = if path.exists() {
+
+        if path.exists() {
             let mut file = OpenOptions::new()
                 .read(true)
                 .open(path)
@@ -44,9 +45,7 @@ impl Config {
             cfg.save();
 
             cfg
-        };
-
-        conf
+        }
     }
 
     pub fn save(&self) {
@@ -55,6 +54,7 @@ impl Config {
 
         let mut file = OpenOptions::new()
             .create(true)
+            .truncate(true)
             .write(true)
             .open(path)
             .expect("Unable to open `config.toml` for writing");

@@ -2,16 +2,20 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use sauce_api::source::{self, Source};
-use sparkle_convenience::{interaction::DeferVisibility, Bot};
+use sparkle_convenience::Bot;
 use twilight_interactions::command::{ApplicationCommandData, CommandModel, CreateCommand};
-use twilight_model::channel::Attachment;
+use twilight_model::{
+    channel::{Attachment, message::MessageFlags},
+    http::interaction::{InteractionResponse, InteractionResponseType},
+};
 
 use crate::{
+    Res,
     config::Config,
     events::{Cmd, Command},
     handle::Handle,
     handle::SpecialHandler,
-    sauce_finder, Res,
+    sauce_finder,
 };
 
 pub fn get() -> Vec<ApplicationCommandData> {
@@ -59,15 +63,26 @@ impl Cmd for FuzzySearch {
             return Ok(());
         }
 
-        handle
-            .defer(if self.ephemeral.unwrap_or(false) {
-                DeferVisibility::Ephemeral
-            } else {
-                DeferVisibility::Visible
-            })
+        bot.http
+            .interaction(bot.application.id)
+            .create_response(
+                command.interaction_id,
+                &command.token,
+                &InteractionResponse {
+                    kind: InteractionResponseType::DeferredChannelMessageWithSource,
+                    data: Some(twilight_model::http::interaction::InteractionResponseData {
+                        flags: if self.ephemeral.unwrap_or_default() {
+                            Some(MessageFlags::EPHEMERAL)
+                        } else {
+                            None
+                        },
+                        ..Default::default()
+                    }),
+                },
+            )
             .await?;
-
-        let link = sauce_finder::get_link(&handle, &self.link, &self.attachment).await?;
+        let link =
+            sauce_finder::get_link(&handle, self.link.as_ref(), self.attachment.as_ref()).await?;
 
         self.execute_with_link(handle, link).await?;
 
